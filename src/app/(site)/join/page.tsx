@@ -15,6 +15,10 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
         <p className="mt-4 text-lg text-slate-600">
           Fill in the form and our team will review your application. {s.feeNotes}
         </p>
+        <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-brand-50 px-4 py-2 text-sm font-medium text-brand-800 ring-1 ring-brand-100">
+          <span className="size-1.5 rounded-full bg-brand-500" />
+          Membership is open to UUM staff only.
+        </p>
         {s.bankDetails && (
           <div className="mt-8 rounded-2xl bg-slate-50 p-6 ring-1 ring-slate-200">
             <h2 className="font-display font-semibold text-slate-900">Payment details</h2>

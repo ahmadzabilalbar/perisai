@@ -35,10 +35,6 @@ export function JoinForm({
 
   return (
     <form action={action} className="card space-y-5 p-6 sm:p-8">
-      <p className="rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-800 ring-1 ring-brand-100">
-        Membership is open to <strong>Universiti Utara Malaysia (UUM) staff</strong> only. Please have your staff
-        number ready.
-      </p>
       <fieldset>
         <legend className="label">Membership plan</legend>
         <div className="grid gap-3 sm:grid-cols-2">
