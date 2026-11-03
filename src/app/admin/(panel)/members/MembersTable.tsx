@@ -30,7 +30,7 @@ export function MembersTable({ members }: { members: Row[] }) {
       .filter(
         (m) =>
           !term ||
-          [m.name, m.email, m.phone, m.memberNo, m.icNo].some((v) => v?.toLowerCase().includes(term)),
+          [m.name, m.email, m.phone, m.memberNo, m.staffNo, m.icNo].some((v) => v?.toLowerCase().includes(term)),
       )
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [members, q, filter, type]);
@@ -38,6 +38,7 @@ export function MembersTable({ members }: { members: Row[] }) {
   function exportCsv() {
     const cols: (keyof Row)[] = [
       "memberNo",
+      "staffNo",
       "name",
       "email",
       "phone",
@@ -65,7 +66,7 @@ export function MembersTable({ members }: { members: Row[] }) {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search name, email, phone, member no…"
+            placeholder="Search name, staff no, email, phone…"
             className="input !pl-9"
           />
         </div>
@@ -115,7 +116,10 @@ export function MembersTable({ members }: { members: Row[] }) {
                     <td className="px-5 py-3">
                       <Link href={`/admin/members/${m.id}`} className="block">
                         <span className="font-medium text-slate-900 group-hover:text-brand-700">{m.name}</span>
-                        <span className="block font-mono text-xs text-slate-400">{m.memberNo}</span>
+                        <span className="block font-mono text-xs text-slate-400">
+                          {m.memberNo}
+                          {m.staffNo && ` · Staff ${m.staffNo}`}
+                        </span>
                       </Link>
                     </td>
                     <td className="px-5 py-3 text-slate-600">
@@ -143,7 +147,10 @@ export function MembersTable({ members }: { members: Row[] }) {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="truncate font-medium text-slate-900">{m.name}</p>
-                      <p className="font-mono text-xs text-slate-400">{m.memberNo}</p>
+                      <p className="font-mono text-xs text-slate-400">
+                        {m.memberNo}
+                        {m.staffNo && ` · Staff ${m.staffNo}`}
+                      </p>
                     </div>
                     <StatusBadge state={m.state} />
                   </div>

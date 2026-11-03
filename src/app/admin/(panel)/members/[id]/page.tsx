@@ -34,7 +34,10 @@ export default async function MemberPage({ params }: Props) {
           <h1 className="mt-1 flex flex-wrap items-center gap-3 font-display text-2xl font-bold text-slate-900">
             {m.name} <StatusBadge state={state} />
           </h1>
-          <p className="font-mono text-sm text-slate-400">{m.memberNo}</p>
+          <p className="font-mono text-sm text-slate-400">
+            {m.memberNo}
+            {m.staffNo && ` · UUM staff no. ${m.staffNo}`}
+          </p>
         </div>
       </div>
 

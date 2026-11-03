@@ -4,6 +4,12 @@ export type MembershipType = "Annual" | "Lifetime";
 export type FeeStatus = "Paid" | "Unpaid" | "Pending";
 export type MemberState = "Active" | "Lifetime" | "Expiring" | "Expired" | "Unpaid" | "Pending";
 
+/** Normalises a UUM staff number; returns "" if it doesn't look valid. */
+export function normalizeStaffNo(input: string) {
+  const v = input.trim().toUpperCase().replace(/\s+/g, "");
+  return /^[A-Z0-9-]{3,15}$/.test(v) ? v : "";
+}
+
 export function today() {
   return new Date().toISOString().slice(0, 10);
 }

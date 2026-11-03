@@ -15,8 +15,11 @@ export function MemberForm({ member }: { member?: Member }) {
       {member && <input type="hidden" name="id" value={member.id} />}
 
       <Section title="Personal details">
-        <Field label="Full name *" className="sm:col-span-2">
+        <Field label="Full name *">
           <input name="name" required defaultValue={member?.name} className="input" />
+        </Field>
+        <Field label="UUM staff number *">
+          <input name="staffNo" required defaultValue={member?.staffNo} className="input uppercase" />
         </Field>
         <Field label="Email">
           <input name="email" type="email" defaultValue={member?.email} className="input" />

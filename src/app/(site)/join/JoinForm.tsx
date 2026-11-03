@@ -35,6 +35,10 @@ export function JoinForm({
 
   return (
     <form action={action} className="card space-y-5 p-6 sm:p-8">
+      <p className="rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-800 ring-1 ring-brand-100">
+        Membership is open to <strong>Universiti Utara Malaysia (UUM) staff</strong> only. Please have your staff
+        number ready.
+      </p>
       <fieldset>
         <legend className="label">Membership plan</legend>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -63,9 +67,23 @@ export function JoinForm({
       </fieldset>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <div className="sm:col-span-2">
+        <div>
           <label className="label" htmlFor="name">Full name *</label>
           <input id="name" name="name" required className="input" autoComplete="name" />
+        </div>
+        <div>
+          <label className="label" htmlFor="staffNo">UUM staff number *</label>
+          <input
+            id="staffNo"
+            name="staffNo"
+            required
+            minLength={3}
+            maxLength={15}
+            pattern="[A-Za-z0-9\-\s]{3,15}"
+            title="Your UUM staff number (letters and numbers only)"
+            className="input uppercase"
+            autoComplete="off"
+          />
         </div>
         <div>
           <label className="label" htmlFor="email">Email *</label>
@@ -74,18 +92,6 @@ export function JoinForm({
         <div>
           <label className="label" htmlFor="phone">Phone *</label>
           <input id="phone" name="phone" type="tel" required className="input" autoComplete="tel" />
-        </div>
-        <div>
-          <label className="label" htmlFor="icNo">IC / ID number</label>
-          <input id="icNo" name="icNo" className="input" />
-        </div>
-        <div>
-          <label className="label" htmlFor="address">Address</label>
-          <input id="address" name="address" className="input" autoComplete="street-address" />
-        </div>
-        <div className="sm:col-span-2">
-          <label className="label" htmlFor="message">Message (optional)</label>
-          <textarea id="message" name="message" rows={3} className="input" />
         </div>
       </div>
 

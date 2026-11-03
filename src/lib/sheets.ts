@@ -13,6 +13,7 @@ export const TABLES = {
   Members: [
     "id",
     "memberNo",
+    "staffNo", // UUM staff number (membership is for UUM staff only)
     "name",
     "email",
     "phone",

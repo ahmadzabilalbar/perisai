@@ -8,6 +8,7 @@ export * from "./format";
 export interface Member {
   id: string;
   memberNo: string;
+  staffNo: string;
   name: string;
   email: string;
   phone: string;
