@@ -89,7 +89,7 @@ export const DEFAULT_SETTINGS: Settings = {
   contactEmail: "",
   contactPhone: "",
   address: "Universiti Utara Malaysia\n06010 UUM Sintok, Kedah",
-  facebook: "",
+  facebook: "https://www.facebook.com/PERISAIUUM/",
   instagram: "",
   joinEnabled: "TRUE",
 };
