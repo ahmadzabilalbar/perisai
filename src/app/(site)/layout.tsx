@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
-import { IconMail, IconPhone, IconPin, IconShield } from "@/components/Icons";
+import { IconMail, IconPhone, IconPin } from "@/components/Icons";
+import { Logo } from "@/components/Logo";
 import { getPublishedPages, getPublishedPosts, getSettings } from "@/lib/data";
 
 export const revalidate = 300;
@@ -22,12 +23,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <footer className="mt-24 bg-slate-950 text-slate-400">
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-3">
           <div>
-            <div className="flex items-center gap-2 font-display text-lg font-bold text-white">
-              <span className="grid size-8 place-items-center rounded-lg bg-brand-600">
-                <IconShield className="size-5" />
-              </span>
-              {s.siteName}
-            </div>
+            <Logo name={s.siteName} tone="light" />
             <p className="mt-3 max-w-xs text-sm leading-relaxed">{s.tagline}</p>
           </div>
           <div>

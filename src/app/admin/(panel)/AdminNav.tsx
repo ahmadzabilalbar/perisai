@@ -10,10 +10,10 @@ import {
   IconHome,
   IconLogout,
   IconMenu,
-  IconShield,
   IconUsers,
   IconX,
 } from "@/components/Icons";
+import { LogoMark } from "@/components/Logo";
 import { logout } from "../actions";
 
 const NAV = [
@@ -32,10 +32,8 @@ export function AdminNav() {
 
   const content = (
     <div className="flex h-full flex-col">
-      <Link href="/admin" className="flex items-center gap-2 px-6 py-5 font-display text-lg font-bold text-white">
-        <span className="grid size-8 place-items-center rounded-lg bg-brand-600">
-          <IconShield className="size-5" />
-        </span>
+      <Link href="/admin" className="flex items-center gap-2.5 px-6 py-5 font-display text-lg font-bold text-white">
+        <LogoMark className="size-8" />
         Admin
       </Link>
       <nav className="flex-1 space-y-1 px-3">
@@ -79,9 +77,7 @@ export function AdminNav() {
       {/* Mobile top bar */}
       <div className="sticky top-0 z-30 flex items-center justify-between bg-slate-950 px-4 py-3 lg:hidden">
         <Link href="/admin" className="flex items-center gap-2 font-display font-bold text-white">
-          <span className="grid size-7 place-items-center rounded-lg bg-brand-600">
-            <IconShield className="size-4" />
-          </span>
+          <LogoMark className="size-7" />
           Admin
         </Link>
         <button onClick={() => setOpen(true)} className="rounded-lg p-2 text-slate-300" aria-label="Open menu">

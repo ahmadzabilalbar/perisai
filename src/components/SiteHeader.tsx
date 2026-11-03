@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { IconMenu, IconShield, IconX } from "./Icons";
+import { IconMenu, IconX } from "./Icons";
+import { Logo } from "./Logo";
 
 export function SiteHeader({
   siteName,
@@ -35,11 +36,8 @@ export function SiteHeader({
       }`}
     >
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link href="/" className="flex items-center gap-2 font-display text-lg font-bold tracking-tight text-slate-900">
-          <span className="grid size-8 place-items-center rounded-lg bg-brand-600 text-white">
-            <IconShield className="size-5" />
-          </span>
-          {siteName}
+        <Link href="/" aria-label={`${siteName} home`}>
+          <Logo name={siteName} />
         </Link>
 
         <div className="hidden items-center gap-1 md:flex">

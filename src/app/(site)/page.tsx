@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LogoMark } from "@/components/Logo";
 import { Markdown } from "@/components/Markdown";
 import { PostCard } from "@/components/PostCard";
 import { IconArrowRight, IconCheck } from "@/components/Icons";
@@ -46,8 +47,11 @@ export default async function HomePage() {
             <div className="relative hidden aspect-[4/3] lg:block">
               <div className="absolute inset-6 rotate-3 rounded-3xl bg-gradient-to-br from-brand-500 to-violet-500 opacity-90" />
               <div className="absolute inset-6 -rotate-2 rounded-3xl bg-white/85 p-8 shadow-xl ring-1 ring-slate-900/5 backdrop-blur">
-                <div className="font-display text-sm font-semibold text-brand-700">Member card</div>
-                <div className="mt-6 font-display text-3xl font-bold text-slate-900">{s.siteName}</div>
+                <div className="flex items-start justify-between">
+                  <div className="font-display text-sm font-semibold text-brand-700">Member card</div>
+                  <LogoMark className="size-14" />
+                </div>
+                <div className="mt-2 font-display text-3xl font-bold tracking-[0.12em] text-slate-900">{s.siteName}</div>
                 <div className="mt-2 text-slate-500">{s.tagline}</div>
                 <div className="absolute inset-x-8 bottom-8 flex items-end justify-between">
                   <div>

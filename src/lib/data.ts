@@ -94,6 +94,9 @@ export const DEFAULT_SETTINGS: Settings = {
   joinEnabled: "TRUE",
 };
 
+/** Seconds before cached sheet data is re-read, so edits made directly in the sheet show up. */
+const REVALIDATE = 300;
+
 export const TAGS = {
   members: "members",
   content: "content",
@@ -115,7 +118,7 @@ export const getMembers = unstable_cache(
     }));
   },
   ["members"],
-  { tags: [TAGS.members] },
+  { tags: [TAGS.members], revalidate: REVALIDATE },
 );
 
 export async function getMember(id: string) {
@@ -128,7 +131,7 @@ export const getPayments = unstable_cache(
     return (await readAll("Payments")) as unknown as Payment[];
   },
   ["payments"],
-  { tags: [TAGS.members] },
+  { tags: [TAGS.members], revalidate: REVALIDATE },
 );
 
 export const getAllContent = unstable_cache(
@@ -153,7 +156,7 @@ export const getAllContent = unstable_cache(
       .sort((a, b) => a.order - b.order || b.createdAt.localeCompare(a.createdAt));
   },
   ["content"],
-  { tags: [TAGS.content] },
+  { tags: [TAGS.content], revalidate: REVALIDATE },
 );
 
 export async function getPublishedPages() {
@@ -170,22 +173,28 @@ export async function getContentBySlug(type: Content["type"], slug: string) {
   return (await getAllContent()).find((c) => c.type === type && c.slug === slug && c.published) ?? null;
 }
 
-export const getSettings = unstable_cache(
-  async (): Promise<Settings> => {
-    if (!isSheetsConfigured()) return DEFAULT_SETTINGS;
+// Only the sheet values are cached; defaults are merged in afterwards so
+// changes to DEFAULT_SETTINGS take effect on the next deploy.
+const getStoredSettings = unstable_cache(
+  async (): Promise<Record<string, string>> => {
+    if (!isSheetsConfigured()) return {};
     try {
       const rows = await readAll("Settings");
-      const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
-      const merged = { ...DEFAULT_SETTINGS };
-      for (const k of Object.keys(DEFAULT_SETTINGS) as (keyof Settings)[]) {
-        if (map[k] !== undefined && map[k] !== "") merged[k] = map[k];
-      }
-      return merged;
+      return Object.fromEntries(rows.map((r) => [r.key, r.value]));
     } catch (e) {
       console.error("Failed to load settings", e);
-      return DEFAULT_SETTINGS;
+      return {};
     }
   },
-  ["settings"],
-  { tags: [TAGS.settings] },
+  ["settings-v2"],
+  { tags: [TAGS.settings], revalidate: REVALIDATE },
 );
+
+export async function getSettings(): Promise<Settings> {
+  const stored = await getStoredSettings();
+  const merged = { ...DEFAULT_SETTINGS };
+  for (const k of Object.keys(DEFAULT_SETTINGS) as (keyof Settings)[]) {
+    if (stored[k] !== undefined && stored[k] !== "") merged[k] = stored[k];
+  }
+  return merged;
+}
