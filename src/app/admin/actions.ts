@@ -1,0 +1,232 @@
+"use server";
+
+import { updateTag } from "next/cache";
+import { redirect } from "next/navigation";
+import { checkPassword, createSession, destroySession, requireAdmin } from "@/lib/auth";
+import { insert, newId, nowIso, remove, replaceAll, update } from "@/lib/sheets";
+import {
+  DEFAULT_SETTINGS,
+  TAGS,
+  addYears,
+  getAllContent,
+  getMember,
+  getMembers,
+  getSettings,
+  nextDay,
+  today,
+  type Settings,
+} from "@/lib/data";
+
+export type FormState = { error?: string; ok?: string } | undefined;
+
+const str = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
+
+function slugify(s: string) {
+  return s
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[^\w\s-]/g, "")
+    .trim()
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+// ---------------- Auth ----------------
+
+export async function login(_: FormState, fd: FormData): Promise<FormState> {
+  if (!checkPassword(str(fd, "password"))) {
+    await new Promise((r) => setTimeout(r, 600)); // slow down guessing
+    return { error: "Incorrect password." };
+  }
+  await createSession();
+  redirect("/admin");
+}
+
+export async function logout() {
+  await destroySession();
+  redirect("/admin/login");
+}
+
+// ---------------- Members ----------------
+
+async function nextMemberNo() {
+  const members = await getMembers();
+  const max = members.reduce((n, m) => Math.max(n, Number(m.memberNo.replace(/\D/g, "")) || 0), 0);
+  return `M${String(max + 1).padStart(4, "0")}`;
+}
+
+export async function saveMember(_: FormState, fd: FormData): Promise<FormState> {
+  await requireAdmin();
+  const id = str(fd, "id");
+  const name = str(fd, "name");
+  if (!name) return { error: "Name is required." };
+
+  const membershipType = str(fd, "membershipType") === "Lifetime" ? "Lifetime" : "Annual";
+  const record = {
+    name,
+    email: str(fd, "email"),
+    phone: str(fd, "phone"),
+    icNo: str(fd, "icNo"),
+    address: str(fd, "address"),
+    membershipType,
+    feeStatus: str(fd, "feeStatus") || "Unpaid",
+    paidUntil: membershipType === "Lifetime" ? "" : str(fd, "paidUntil"),
+    lastPaymentDate: str(fd, "lastPaymentDate"),
+    lastPaymentAmount: str(fd, "lastPaymentAmount"),
+    joinDate: str(fd, "joinDate") || today(),
+    notes: str(fd, "notes"),
+    updatedAt: nowIso(),
+  };
+
+  try {
+    if (id) {
+      await update("Members", id, record);
+    } else {
+      await insert("Members", {
+        ...record,
+        id: newId(),
+        memberNo: str(fd, "memberNo") || (await nextMemberNo()),
+        createdAt: nowIso(),
+      });
+    }
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+  updateTag(TAGS.members);
+  redirect("/admin/members");
+}
+
+export async function deleteMember(id: string) {
+  await requireAdmin();
+  await remove("Members", id);
+  updateTag(TAGS.members);
+  redirect("/admin/members");
+}
+
+/**
+ * Records a fee payment.
+ * Annual: extends validity by `years` from the later of today or the current expiry.
+ * Lifetime: marks as paid permanently.
+ */
+export async function recordPayment(_: FormState, fd: FormData): Promise<FormState> {
+  await requireAdmin();
+  const id = str(fd, "id");
+  const m = await getMember(id);
+  if (!m) return { error: "Member not found." };
+
+  const date = str(fd, "date") || today();
+  const amount = str(fd, "amount");
+  const type = str(fd, "type") === "Lifetime" ? "Lifetime" : "Annual";
+  const years = Math.max(1, Number(str(fd, "years")) || 1);
+
+  let paidUntil = "";
+  let coverage = "Lifetime";
+  if (type === "Annual") {
+    const stillValid = m.membershipType === "Annual" && m.feeStatus === "Paid" && m.paidUntil >= date;
+    // Continue from the day after current expiry, otherwise from the payment date
+    const start = stillValid ? nextDay(m.paidUntil) : date;
+    paidUntil = addYears(start, years);
+    coverage = `${start} → ${paidUntil}`;
+  }
+
+  try {
+    await insert("Payments", {
+      id: newId(),
+      memberId: m.id,
+      memberName: m.name,
+      date,
+      type,
+      amount,
+      coverage,
+      note: str(fd, "note"),
+    });
+    await update("Members", m.id, {
+      membershipType: type,
+      feeStatus: "Paid",
+      paidUntil,
+      lastPaymentDate: date,
+      lastPaymentAmount: amount,
+      updatedAt: nowIso(),
+    });
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+  updateTag(TAGS.members);
+  return { ok: type === "Annual" ? `Payment recorded. Valid until ${paidUntil}.` : "Lifetime payment recorded." };
+}
+
+export async function setFeeStatus(id: string, feeStatus: "Paid" | "Unpaid" | "Pending") {
+  await requireAdmin();
+  await update("Members", id, { feeStatus, updatedAt: nowIso() });
+  updateTag(TAGS.members);
+}
+
+// ---------------- Content (pages & posts) ----------------
+
+export async function saveContent(_: FormState, fd: FormData): Promise<FormState> {
+  await requireAdmin();
+  const id = str(fd, "id");
+  const title = str(fd, "title");
+  if (!title) return { error: "Title is required." };
+  const type = str(fd, "type") === "post" ? "post" : "page";
+  const slug = slugify(str(fd, "slug") || title);
+  if (!slug) return { error: "Slug is invalid." };
+  if (type === "page" && ["admin", "news", "join", "api"].includes(slug)) {
+    return { error: `"${slug}" is a reserved URL. Choose another slug.` };
+  }
+
+  const all = await getAllContent();
+  if (all.some((c) => c.type === type && c.slug === slug && c.id !== id)) {
+    return { error: `Another ${type} already uses the URL "${slug}".` };
+  }
+
+  const record = {
+    type,
+    slug,
+    title,
+    excerpt: str(fd, "excerpt"),
+    body: String(fd.get("body") ?? ""),
+    coverImage: str(fd, "coverImage"),
+    published: fd.get("published") ? "TRUE" : "FALSE",
+    showInNav: fd.get("showInNav") ? "TRUE" : "FALSE",
+    order: str(fd, "order") || "0",
+    updatedAt: nowIso(),
+  };
+
+  try {
+    if (id) await update("Content", id, record);
+    else await insert("Content", { ...record, id: newId(), createdAt: nowIso() });
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+  updateTag(TAGS.content);
+  redirect("/admin/content");
+}
+
+export async function deleteContent(id: string) {
+  await requireAdmin();
+  await remove("Content", id);
+  updateTag(TAGS.content);
+  redirect("/admin/content");
+}
+
+// ---------------- Settings ----------------
+
+export async function saveSettings(_: FormState, fd: FormData): Promise<FormState> {
+  await requireAdmin();
+  try {
+    const current = await getSettings();
+    const rows = (Object.keys(DEFAULT_SETTINGS) as (keyof Settings)[]).map((key) => {
+      let value: string = current[key];
+      // Checkboxes are omitted from the form data when unchecked
+      if (key === "joinEnabled") value = fd.get(key) ? "TRUE" : "FALSE";
+      else if (fd.has(key)) value = String(fd.get(key) ?? "").trim();
+      return { key, value };
+    });
+    await replaceAll("Settings", rows);
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+  updateTag(TAGS.settings);
+  return { ok: "Settings saved." };
+}
