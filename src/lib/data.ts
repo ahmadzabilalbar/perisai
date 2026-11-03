@@ -81,8 +81,8 @@ export const DEFAULT_SETTINGS: Settings = {
   aboutTitle: "About PERISAI",
   aboutBody:
     "**PERISAI (Persatuan Staf UUM Yang Mempunyai Anak Istimewa)** is an association of Universiti Utara Malaysia staff who have children with special needs.\n\nWe provide a support network for families, share information and resources, organise programmes and activities for our members and their children, and advocate for a more inclusive campus community.",
-  annualFee: "50",
-  lifetimeFee: "500",
+  annualFee: "20",
+  lifetimeFee: "100",
   currency: "RM",
   feeNotes: "Annual membership is valid for 12 months from the date of payment.",
   bankDetails: "",
