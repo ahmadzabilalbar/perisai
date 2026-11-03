@@ -2,7 +2,16 @@
 
 import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
-import { checkPassword, createSession, destroySession, requireEditor, requireSuperAdmin, superAdminEmails } from "@/lib/auth";
+import {
+  checkPassword,
+  createSession,
+  destroySession,
+  requireEditor,
+  requireSuperAdmin,
+  roleForEmail,
+  superAdminEmails,
+} from "@/lib/auth";
+import { isEmailLoginEnabled, sendLoginCode, verifyLoginCode } from "@/lib/login-codes";
 import { insert, newId, nowIso, remove, replaceAll, update } from "@/lib/sheets";
 import {
   DEFAULT_SETTINGS,
@@ -41,6 +50,43 @@ export async function login(_: FormState, fd: FormData): Promise<FormState> {
     return { error: "Incorrect password." };
   }
   await createSession();
+  redirect("/admin");
+}
+
+export type CodeState = { step: "email" | "code"; email?: string; error?: string; info?: string } | undefined;
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Step 1 of email sign-in: send a code if the address has access (same reply either way). */
+export async function requestLoginCode(_: CodeState, fd: FormData): Promise<CodeState> {
+  if (!isEmailLoginEnabled()) return { step: "email", error: "Email sign-in is not configured." };
+  const email = str(fd, "email").toLowerCase();
+  if (!EMAIL_RE.test(email)) return { step: "email", error: "Please enter a valid email address." };
+
+  try {
+    if (await roleForEmail(email)) await sendLoginCode(email, (await getSettings()).siteName);
+    else await new Promise((r) => setTimeout(r, 800)); // don't reveal which emails have access
+  } catch (e) {
+    console.error("Failed to send sign-in code", e);
+    return { step: "email", email, error: "Could not send the code. Please try again later." };
+  }
+  return {
+    step: "code",
+    email,
+    info: `If ${email} has admin access, a 6-digit code has been sent to it. Check your inbox (and spam folder).`,
+  };
+}
+
+/** Step 2 of email sign-in: check the code and start a session. */
+export async function verifyLoginCodeAction(_: CodeState, fd: FormData): Promise<CodeState> {
+  const email = str(fd, "email").toLowerCase();
+  const code = str(fd, "code").replace(/\s+/g, "");
+  const role = EMAIL_RE.test(email) ? await roleForEmail(email) : null;
+  if (!role || !(await verifyLoginCode(email, code))) {
+    await new Promise((r) => setTimeout(r, 600));
+    return { step: "code", email, error: "That code is incorrect or has expired. Request a new code if needed." };
+  }
+  await createSession({ role, email });
   redirect("/admin");
 }
 

@@ -4,7 +4,19 @@ import { redirect } from "next/navigation";
 import { isAdmin, isPasswordLoginEnabled } from "@/lib/auth";
 import { isGoogleLoginEnabled } from "@/lib/google-oauth";
 import { LogoMark } from "@/components/Logo";
+import { isEmailLoginEnabled } from "@/lib/login-codes";
+import { EmailLogin } from "./EmailLogin";
 import { LoginForm } from "./LoginForm";
+
+function Divider({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-3 text-xs text-slate-400">
+      <span className="h-px flex-1 bg-slate-200" />
+      {children}
+      <span className="h-px flex-1 bg-slate-200" />
+    </div>
+  );
+}
 
 export const metadata: Metadata = { title: "Admin sign in" };
 
@@ -19,6 +31,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const { error } = await searchParams;
   const google = isGoogleLoginEnabled();
   const password = isPasswordLoginEnabled();
+  const email = isEmailLoginEnabled();
 
   return (
     <div className="relative grid min-h-screen place-items-center overflow-hidden bg-slate-950 px-4">
@@ -51,20 +64,27 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             </a>
           )}
 
-          {google && password && (
-            <div className="flex items-center gap-3 text-xs text-slate-400">
-              <span className="h-px flex-1 bg-slate-200" />
-              or use admin password
-              <span className="h-px flex-1 bg-slate-200" />
-            </div>
-          )}
+          {google && email && <Divider>or sign in with email</Divider>}
 
-          {password && <LoginForm />}
+          {email && <EmailLogin />}
 
-          {!google && !password && (
+          {password &&
+            (google || email ? (
+              <details className="group pt-1">
+                <summary className="cursor-pointer list-none text-center text-xs text-slate-400 hover:text-slate-600">
+                  Use admin password
+                </summary>
+                <div className="mt-3">
+                  <LoginForm />
+                </div>
+              </details>
+            ) : (
+              <LoginForm />
+            ))}
+
+          {!google && !email && !password && (
             <p className="text-sm text-slate-600">
-              No sign-in method is configured. Set <code>GOOGLE_OAUTH_CLIENT_ID</code> /{" "}
-              <code>GOOGLE_OAUTH_CLIENT_SECRET</code> or <code>ADMIN_PASSWORD</code>.
+              No sign-in method is configured. Set up Google sign-in, email (SMTP) or <code>ADMIN_PASSWORD</code>.
             </p>
           )}
         </div>

@@ -47,6 +47,8 @@ export const TABLES = {
   Settings: ["key", "value"],
   // Google accounts allowed into /admin (super admins come from SUPERADMIN_EMAILS instead)
   Users: ["email", "role", "name", "addedBy", "createdAt"], // role: admin | viewer
+  // One-time sign-in codes for email login (only a hash of the code is stored)
+  LoginCodes: ["email", "codeHash", "expiresAt", "attempts", "createdAt"],
 } as const;
 
 export type TableName = keyof typeof TABLES;
@@ -110,25 +112,38 @@ const lastCol = (t: TableName) => colLetter(TABLES[t].length);
 
 // ---- Schema bootstrap: creates missing tabs + header rows on first use ----
 
-let sheetIds: Partial<Record<TableName, number>> | null = null;
+type SheetIds = Partial<Record<TableName, number>>;
+let schema: Promise<SheetIds> | null = null;
 
-async function ensureSchema() {
-  if (sheetIds) return sheetIds;
+/** Runs once per server instance; concurrent callers share the same promise. */
+function ensureSchema() {
+  schema ??= setupSchema().catch((e) => {
+    schema = null; // retry on the next call
+    throw e;
+  });
+  return schema;
+}
 
+async function setupSchema(): Promise<SheetIds> {
   type Meta = { sheets: { properties: { title: string; sheetId: number } }[] };
   let meta = await api<Meta>("?fields=sheets.properties(title,sheetId)");
   const existing = new Set(meta.sheets.map((s) => s.properties.title));
   const missing = (Object.keys(TABLES) as TableName[]).filter((t) => !existing.has(t));
 
   if (missing.length) {
-    await api(":batchUpdate", {
-      method: "POST",
-      body: JSON.stringify({
-        requests: missing.map((title) => ({
-          addSheet: { properties: { title, gridProperties: { frozenRowCount: 1 } } },
-        })),
-      }),
-    });
+    try {
+      await api(":batchUpdate", {
+        method: "POST",
+        body: JSON.stringify({
+          requests: missing.map((title) => ({
+            addSheet: { properties: { title, gridProperties: { frozenRowCount: 1 } } },
+          })),
+        }),
+      });
+    } catch (e) {
+      // Another server instance created it at the same moment; that's fine
+      if (!String(e).includes("already exists")) throw e;
+    }
     meta = await api<Meta>("?fields=sheets.properties(title,sheetId)");
   }
 
@@ -144,13 +159,13 @@ async function ensureSchema() {
     }),
   });
 
-  sheetIds = {};
+  const ids: SheetIds = {};
   for (const s of meta.sheets) {
     if (s.properties.title in TABLES) {
-      sheetIds[s.properties.title as TableName] = s.properties.sheetId;
+      ids[s.properties.title as TableName] = s.properties.sheetId;
     }
   }
-  return sheetIds;
+  return ids;
 }
 
 // ---- CRUD ----

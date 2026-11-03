@@ -10,6 +10,7 @@ A membership management system with a public website, built on **Next.js 16 + Ta
   - **Admin**: can view and update everything.
   - **View only**: can see every admin page but cannot change anything. New users always start here, and the super admin upgrades them to Admin when needed.
   - Role changes and removals take effect immediately, with no re-login needed.
+- **Sign in with an email code**: works with any address on the access list (e.g. `name@uum.edu.my`). A 6-digit code is emailed, valid for 10 minutes, with a maximum of 5 attempts, and can be used only once
 - Optional shared admin password (`ADMIN_PASSWORD`) as a fallback, with Admin role
 - Dashboard: member counts, fees collected this year, members needing attention, recent payments
 - Members: search, filter by status/type, CSV export, add/edit/delete
@@ -37,7 +38,8 @@ The app **creates the tabs and header rows automatically** on first use:
 | `Payments` | Payment log (one row per payment) |
 | `Content` | Pages and news posts |
 | `Settings` | Key/value website settings |
-| `Users` | Google accounts with admin access and their role (`admin` / `viewer`) |
+| `Users` | Email addresses with admin access and their role (`admin` / `viewer`) |
+| `LoginCodes` | Temporary email sign-in codes (hashed; removed after use) |
 
 You can also view or edit data directly in the sheet. Changes made in the sheet appear on the site within about 5 minutes, or immediately after any admin save.
 
@@ -65,6 +67,7 @@ Copy `.env.example` to `.env.local` and fill in:
 | `GOOGLE_SERVICE_ACCOUNT_EMAIL` | `client_email` from the JSON key |
 | `GOOGLE_PRIVATE_KEY` | `private_key` from the JSON key (including the `-----BEGIN…` / `END…` lines) |
 | `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET` | OAuth web client for "Sign in with Google" (see below) |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | Email sending for sign-in codes. For Gmail: `smtp.gmail.com`, `465`, your Gmail address, and an [App Password](https://myaccount.google.com/apppasswords) |
 | `SUPERADMIN_EMAILS` | Optional; comma-separated super admin Gmail addresses (default `ahmadzabilalbar@gmail.com`) |
 
 #### Sign in with Google (OAuth client)
