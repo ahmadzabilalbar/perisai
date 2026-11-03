@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FacebookFeed } from "@/components/FacebookFeed";
 import { LogoMark } from "@/components/Logo";
 import { Markdown } from "@/components/Markdown";
 import { PostCard } from "@/components/PostCard";
@@ -36,7 +37,9 @@ export default async function HomePage() {
               </a>
             </div>
           </div>
-          {s.heroImage ? (
+          {s.facebook ? (
+            <FacebookFeed pageUrl={s.facebook} name={s.siteName} />
+          ) : s.heroImage ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={s.heroImage}
