@@ -1,10 +1,12 @@
 /** PERISAI shield emblem. */
+export const LOGO_PATH =
+  "M60 57 L55 5 L0 30 Q8 178 137 262 Q262 178 268 32 Q166 -2 66 3 L72 56 L205 47 Q194 138 137 203 Q76 148 60 57 Z";
+
 export function LogoMark({ className = "size-9" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 260 262" className={className} aria-hidden>
-      <path fill="#4F6FF6" d="M0 30 Q26 16 54 6 L62 46 Q90 140 130 204 L130 260 Q40 190 0 30 Z" />
-      <path fill="#4F6FF6" d="M66 0 Q170 4 260 30 Q222 190 130 260 L130 204 Q172 140 198 46 L68 46 Z" />
-      <circle cx="130" cy="106" r="36" fill="#FFD95A" />
+    <svg viewBox="0 0 268 262" className={className} aria-hidden>
+      <path fill="#4F6FF6" d={LOGO_PATH} />
+      <circle cx="139" cy="110" r="36" fill="#FFD95A" />
     </svg>
   );
 }
