@@ -8,12 +8,12 @@ import { login } from "../actions";
 export function LoginForm() {
   const [state, action] = useActionState(login, undefined);
   return (
-    <form action={action} className="space-y-4 rounded-2xl bg-white p-6 shadow-2xl">
+    <form action={action} className="space-y-4">
       <div>
         <label htmlFor="password" className="label">
           Password
         </label>
-        <input id="password" name="password" type="password" required autoFocus className="input" />
+        <input id="password" name="password" type="password" required className="input" />
       </div>
       <FormMessage state={state} />
       <SubmitButton className="btn-primary w-full" pendingText="Signing in…">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { useCanEdit } from "@/components/AdminRole";
 import { FormMessage } from "@/components/FormMessage";
 import { SubmitButton } from "@/components/SubmitButton";
 import type { Member } from "@/lib/data";
@@ -8,10 +9,12 @@ import { saveMember } from "../../actions";
 
 export function MemberForm({ member }: { member?: Member }) {
   const [state, action] = useActionState(saveMember, undefined);
+  const canEdit = useCanEdit();
   const [type, setType] = useState(member?.membershipType ?? "Annual");
 
   return (
     <form action={action} className="card space-y-6 p-5 sm:p-6">
+      <fieldset disabled={!canEdit} className="contents">
       {member && <input type="hidden" name="id" value={member.id} />}
 
       <Section title="Personal details">
@@ -108,8 +111,9 @@ export function MemberForm({ member }: { member?: Member }) {
 
       <FormMessage state={state} />
       <div className="flex justify-end gap-3">
-        <SubmitButton>{member ? "Save changes" : "Add member"}</SubmitButton>
+        {canEdit && <SubmitButton>{member ? "Save changes" : "Add member"}</SubmitButton>}
       </div>
+      </fieldset>
     </form>
   );
 }

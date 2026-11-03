@@ -45,6 +45,8 @@ export const TABLES = {
     "updatedAt",
   ],
   Settings: ["key", "value"],
+  // Google accounts allowed into /admin (super admins come from SUPERADMIN_EMAILS instead)
+  Users: ["email", "role", "name", "addedBy", "createdAt"], // role: admin | viewer
 } as const;
 
 export type TableName = keyof typeof TABLES;

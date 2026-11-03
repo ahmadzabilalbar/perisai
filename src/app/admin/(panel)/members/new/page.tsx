@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { requireEditorPage } from "@/lib/auth";
 import { MemberForm } from "../MemberForm";
 
 export const metadata: Metadata = { title: "Add member" };
 
-export default function NewMemberPage() {
+export default async function NewMemberPage() {
+  await requireEditorPage();
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>

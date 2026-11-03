@@ -2,7 +2,7 @@
 
 import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
-import { checkPassword, createSession, destroySession, requireAdmin } from "@/lib/auth";
+import { checkPassword, createSession, destroySession, requireEditor, requireSuperAdmin, superAdminEmails } from "@/lib/auth";
 import { insert, newId, nowIso, remove, replaceAll, update } from "@/lib/sheets";
 import {
   DEFAULT_SETTINGS,
@@ -12,6 +12,7 @@ import {
   getMember,
   getMembers,
   getSettings,
+  getUsers,
   nextDay,
   normalizeStaffNo,
   today,
@@ -57,7 +58,7 @@ async function nextMemberNo() {
 }
 
 export async function saveMember(_: FormState, fd: FormData): Promise<FormState> {
-  await requireAdmin();
+  await requireEditor();
   const id = str(fd, "id");
   const name = str(fd, "name");
   if (!name) return { error: "Name is required." };
@@ -104,7 +105,7 @@ export async function saveMember(_: FormState, fd: FormData): Promise<FormState>
 }
 
 export async function deleteMember(id: string) {
-  await requireAdmin();
+  await requireEditor();
   await remove("Members", id);
   updateTag(TAGS.members);
   redirect("/admin/members");
@@ -116,7 +117,7 @@ export async function deleteMember(id: string) {
  * Lifetime: marks as paid permanently.
  */
 export async function recordPayment(_: FormState, fd: FormData): Promise<FormState> {
-  await requireAdmin();
+  await requireEditor();
   const id = str(fd, "id");
   const m = await getMember(id);
   if (!m) return { error: "Member not found." };
@@ -163,7 +164,7 @@ export async function recordPayment(_: FormState, fd: FormData): Promise<FormSta
 }
 
 export async function setFeeStatus(id: string, feeStatus: "Paid" | "Unpaid" | "Pending") {
-  await requireAdmin();
+  await requireEditor();
   await update("Members", id, { feeStatus, updatedAt: nowIso() });
   updateTag(TAGS.members);
 }
@@ -171,7 +172,7 @@ export async function setFeeStatus(id: string, feeStatus: "Paid" | "Unpaid" | "P
 // ---------------- Content (pages & posts) ----------------
 
 export async function saveContent(_: FormState, fd: FormData): Promise<FormState> {
-  await requireAdmin();
+  await requireEditor();
   const id = str(fd, "id");
   const title = str(fd, "title");
   if (!title) return { error: "Title is required." };
@@ -211,7 +212,7 @@ export async function saveContent(_: FormState, fd: FormData): Promise<FormState
 }
 
 export async function deleteContent(id: string) {
-  await requireAdmin();
+  await requireEditor();
   await remove("Content", id);
   updateTag(TAGS.content);
   redirect("/admin/content");
@@ -220,7 +221,7 @@ export async function deleteContent(id: string) {
 // ---------------- Settings ----------------
 
 export async function saveSettings(_: FormState, fd: FormData): Promise<FormState> {
-  await requireAdmin();
+  await requireEditor();
   try {
     const current = await getSettings();
     const rows = (Object.keys(DEFAULT_SETTINGS) as (keyof Settings)[]).map((key) => {
@@ -236,4 +237,35 @@ export async function saveSettings(_: FormState, fd: FormData): Promise<FormStat
   }
   updateTag(TAGS.settings);
   return { ok: "Settings saved." };
+}
+
+// ---------------- Users (super admin only) ----------------
+
+export async function addUser(_: FormState, fd: FormData): Promise<FormState> {
+  const me = await requireSuperAdmin();
+  const email = str(fd, "email").toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Please enter a valid Google email address." };
+  if (superAdminEmails().includes(email)) return { error: "That account is already a super admin." };
+  if ((await getUsers()).some((u) => u.email === email)) return { error: `${email} has already been added.` };
+
+  try {
+    // New admins always start as view-only; the super admin upgrades them later
+    await insert("Users", { email, role: "viewer", name: str(fd, "name"), addedBy: me.email ?? "", createdAt: nowIso() });
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+  updateTag(TAGS.users);
+  return { ok: `${email} added with view-only access.` };
+}
+
+export async function setUserRole(email: string, role: "admin" | "viewer") {
+  await requireSuperAdmin();
+  await update("Users", email, { role }, "email");
+  updateTag(TAGS.users);
+}
+
+export async function removeUser(email: string) {
+  await requireSuperAdmin();
+  await remove("Users", email, "email");
+  updateTag(TAGS.users);
 }

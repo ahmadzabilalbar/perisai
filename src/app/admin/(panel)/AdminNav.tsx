@@ -10,6 +10,7 @@ import {
   IconHome,
   IconLogout,
   IconMenu,
+  IconShield,
   IconUsers,
   IconX,
 } from "@/components/Icons";
@@ -23,7 +24,8 @@ const NAV = [
   { href: "/admin/settings", label: "Website settings", icon: IconCog },
 ];
 
-export function AdminNav() {
+export function AdminNav({ user, role, isSuperAdmin }: { user: string; role: string; isSuperAdmin: boolean }) {
+  const nav = isSuperAdmin ? [...NAV, { href: "/admin/users", label: "Users & access", icon: IconShield }] : NAV;
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [pathname]);
@@ -37,7 +39,7 @@ export function AdminNav() {
         Admin
       </Link>
       <nav className="flex-1 space-y-1 px-3">
-        {NAV.map(({ href, label, icon: Icon }) => (
+        {nav.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
             href={href}
@@ -51,6 +53,12 @@ export function AdminNav() {
         ))}
       </nav>
       <div className="space-y-1 border-t border-white/10 p-3">
+        <div className="px-3 py-2">
+          <p className="truncate text-sm font-medium text-white" title={user}>
+            {user}
+          </p>
+          <p className="text-xs text-brand-300">{role}</p>
+        </div>
         <Link
           href="/"
           target="_blank"

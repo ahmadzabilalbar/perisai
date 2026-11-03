@@ -102,6 +102,7 @@ export const TAGS = {
   members: "members",
   content: "content",
   settings: "settings",
+  users: "users",
 } as const;
 
 const bool = (v: string) => v?.toUpperCase() === "TRUE";
@@ -199,3 +200,31 @@ export async function getSettings(): Promise<Settings> {
   }
   return merged;
 }
+
+// ---------- Admin users (Google sign-in) ----------
+
+export type UserRole = "admin" | "viewer";
+
+export interface AdminUser {
+  email: string;
+  role: UserRole;
+  name: string;
+  addedBy: string;
+  createdAt: string;
+}
+
+export const getUsers = unstable_cache(
+  async (): Promise<AdminUser[]> => {
+    if (!isSheetsConfigured()) return [];
+    const rows = await readAll("Users");
+    return rows
+      .filter((r) => r.email)
+      .map((r) => ({
+        ...(r as unknown as AdminUser),
+        email: r.email.trim().toLowerCase(),
+        role: r.role === "admin" ? "admin" : "viewer",
+      }));
+  },
+  ["users"],
+  { tags: [TAGS.users], revalidate: REVALIDATE },
+);

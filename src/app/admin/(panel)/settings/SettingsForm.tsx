@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useCanEdit } from "@/components/AdminRole";
 import { FormMessage } from "@/components/FormMessage";
 import { SubmitButton } from "@/components/SubmitButton";
 import type { Settings } from "@/lib/data";
@@ -56,9 +57,11 @@ const GROUPS: { title: string; fields: FieldDef[] }[] = [
 
 export function SettingsForm({ settings }: { settings: Settings }) {
   const [state, action] = useActionState(saveSettings, undefined);
+  const canEdit = useCanEdit();
 
   return (
     <form action={action} className="space-y-6">
+      <fieldset disabled={!canEdit} className="contents">
       {GROUPS.map((g) => (
         <fieldset key={g.title} className="card p-5 sm:p-6">
           <legend className="sr-only">{g.title}</legend>
@@ -94,12 +97,15 @@ export function SettingsForm({ settings }: { settings: Settings }) {
         />
       </div>
 
-      <div className="sticky bottom-4 flex items-center justify-end gap-4 rounded-2xl bg-white/80 p-3 ring-1 ring-slate-200 backdrop-blur">
-        <div className="flex-1">
-          <FormMessage state={state} />
+      {canEdit && (
+        <div className="sticky bottom-4 flex items-center justify-end gap-4 rounded-2xl bg-white/80 p-3 ring-1 ring-slate-200 backdrop-blur">
+          <div className="flex-1">
+            <FormMessage state={state} />
+          </div>
+          <SubmitButton>Save settings</SubmitButton>
         </div>
-        <SubmitButton>Save settings</SubmitButton>
-      </div>
+      )}
+      </fieldset>
     </form>
   );
 }

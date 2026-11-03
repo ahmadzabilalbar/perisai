@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EditOnly } from "@/components/AdminRole";
 import { StatusBadge } from "@/components/StatusBadge";
 import { IconPlus } from "@/components/Icons";
 import { daysUntil, formatDate, getMembers, getPayments, getSettings, memberState } from "@/lib/data";
@@ -40,9 +41,11 @@ export default async function Dashboard() {
           <h1 className="font-display text-2xl font-bold text-slate-900">Dashboard</h1>
           <p className="text-sm text-slate-500">Overview of your membership</p>
         </div>
-        <Link href="/admin/members/new" className="btn-primary">
-          <IconPlus className="size-4" /> Add member
-        </Link>
+        <EditOnly>
+          <Link href="/admin/members/new" className="btn-primary">
+            <IconPlus className="size-4" /> Add member
+          </Link>
+        </EditOnly>
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3">

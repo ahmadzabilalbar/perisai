@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { EditOnly } from "@/components/AdminRole";
 import { IconPlus } from "@/components/Icons";
 import { getMembers, memberState } from "@/lib/data";
 import { MembersTable } from "./MembersTable";
@@ -16,9 +17,11 @@ export default async function MembersPage() {
           <h1 className="font-display text-2xl font-bold text-slate-900">Members</h1>
           <p className="text-sm text-slate-500">{members.length} total</p>
         </div>
-        <Link href="/admin/members/new" className="btn-primary">
-          <IconPlus className="size-4" /> Add member
-        </Link>
+        <EditOnly>
+          <Link href="/admin/members/new" className="btn-primary">
+            <IconPlus className="size-4" /> Add member
+          </Link>
+        </EditOnly>
       </div>
       <MembersTable members={members} />
     </div>

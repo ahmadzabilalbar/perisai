@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ConfirmButton } from "@/components/ConfirmButton";
+import { EditOnly } from "@/components/AdminRole";
 import { daysUntil, formatDate, getMember, getPayments, getSettings, memberState } from "@/lib/data";
 import { deleteMember, setFeeStatus } from "../../../actions";
 import { MemberForm } from "../MemberForm";
@@ -65,24 +66,28 @@ export default async function MemberPage({ params }: Props) {
               <p className="mt-1 text-sm text-slate-500">{days} days remaining</p>
             )}
 
-            <div className="mt-4 flex flex-wrap gap-2">
-              {(["Paid", "Unpaid", "Pending"] as const)
-                .filter((st) => st !== m.feeStatus)
-                .map((st) => (
-                  <form key={st} action={setFeeStatus.bind(null, m.id, st)}>
-                    <button className="btn-secondary !px-3 !py-1.5 !text-xs">Mark {st.toLowerCase()}</button>
-                  </form>
-                ))}
-            </div>
+            <EditOnly>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {(["Paid", "Unpaid", "Pending"] as const)
+                  .filter((st) => st !== m.feeStatus)
+                  .map((st) => (
+                    <form key={st} action={setFeeStatus.bind(null, m.id, st)}>
+                      <button className="btn-secondary !px-3 !py-1.5 !text-xs">Mark {st.toLowerCase()}</button>
+                    </form>
+                  ))}
+              </div>
+            </EditOnly>
           </div>
 
-          <PaymentForm
-            memberId={m.id}
-            defaultType={m.membershipType}
-            currency={s.currency}
-            annualFee={s.annualFee}
-            lifetimeFee={s.lifetimeFee}
-          />
+          <EditOnly>
+            <PaymentForm
+              memberId={m.id}
+              defaultType={m.membershipType}
+              currency={s.currency}
+              annualFee={s.annualFee}
+              lifetimeFee={s.lifetimeFee}
+            />
+          </EditOnly>
 
           <div className="card overflow-hidden">
             <h2 className="border-b border-slate-100 px-5 py-4 font-semibold text-slate-900">Payment history</h2>
@@ -109,11 +114,13 @@ export default async function MemberPage({ params }: Props) {
             )}
           </div>
 
-          <form action={deleteMember.bind(null, m.id)}>
-            <ConfirmButton message={`Delete ${m.name}? This cannot be undone.`} className="btn-ghost w-full !text-rose-600">
-              Delete member
-            </ConfirmButton>
-          </form>
+          <EditOnly>
+            <form action={deleteMember.bind(null, m.id)}>
+              <ConfirmButton message={`Delete ${m.name}? This cannot be undone.`} className="btn-ghost w-full !text-rose-600">
+                Delete member
+              </ConfirmButton>
+            </form>
+          </EditOnly>
         </aside>
       </div>
     </div>

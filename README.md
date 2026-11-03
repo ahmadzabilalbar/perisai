@@ -5,7 +5,12 @@ A membership management system with a public website, built on **Next.js 16 + Ta
 ## Features
 
 **Admin (`/admin`)**
-- Password sign-in (single admin password, signed session cookie, 7-day expiry)
+- **Sign in with Google** with three roles:
+  - **Super admin**: Gmail addresses in `SUPERADMIN_EMAILS`. Full access, plus **Users & access** to add people.
+  - **Admin**: can view and update everything.
+  - **View only**: can see every admin page but cannot change anything. New users always start here, and the super admin upgrades them to Admin when needed.
+  - Role changes and removals take effect immediately, with no re-login needed.
+- Optional shared admin password (`ADMIN_PASSWORD`) as a fallback, with Admin role
 - Dashboard: member counts, fees collected this year, members needing attention, recent payments
 - Members: search, filter by status/type, CSV export, add/edit/delete
 - Fees for **Annual** and **Lifetime** membership:
@@ -32,6 +37,7 @@ The app **creates the tabs and header rows automatically** on first use:
 | `Payments` | Payment log (one row per payment) |
 | `Content` | Pages and news posts |
 | `Settings` | Key/value website settings |
+| `Users` | Google accounts with admin access and their role (`admin` / `viewer`) |
 
 You can also view or edit data directly in the sheet. Changes made in the sheet appear on the site within about 5 minutes, or immediately after any admin save.
 
@@ -58,6 +64,17 @@ Copy `.env.example` to `.env.local` and fill in:
 | `GOOGLE_SHEET_ID` | Sheet ID from step 1 |
 | `GOOGLE_SERVICE_ACCOUNT_EMAIL` | `client_email` from the JSON key |
 | `GOOGLE_PRIVATE_KEY` | `private_key` from the JSON key (including the `-----BEGIN…` / `END…` lines) |
+| `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET` | OAuth web client for "Sign in with Google" (see below) |
+| `SUPERADMIN_EMAILS` | Optional; comma-separated super admin Gmail addresses (default `ahmadzabilalbar@gmail.com`) |
+
+#### Sign in with Google (OAuth client)
+
+1. Google Cloud Console → **Google Auth Platform** → **Branding**: set the app name to `PERISAI Admin`, choose **External** audience, and save.
+2. **Audience** → **Publish app**, so any Google account can sign in. Access is still limited to the super admin and the **Users & access** list.
+3. **Clients → Create client → Web application**, and add these **Authorised redirect URIs**:
+   - `http://localhost:3000/api/auth/google/callback`
+   - `https://perisai-uum.vercel.app/api/auth/google/callback`
+4. Copy the **Client ID** and **Client secret** into `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET`.
 
 ### 3. Run locally
 
@@ -81,5 +98,5 @@ To change variables later, use **Settings → Environment Variables**, then **Re
 ## Notes & limits
 
 - Google Sheets API quota is ~60 requests/min per user. Reads are cached, so this is plenty for small and medium organisations (up to a few thousand members).
-- There is a single admin password. To revoke all sessions, change `AUTH_SECRET`.
+- To sign everyone out, change `AUTH_SECRET`. Removing a user in **Users & access** revokes their access immediately.
 - Images are referenced by URL. Host them anywhere public (e.g. Google Drive public link, Imgur, Cloudinary).

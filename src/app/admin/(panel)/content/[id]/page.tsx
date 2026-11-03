@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ConfirmButton } from "@/components/ConfirmButton";
+import { EditOnly } from "@/components/AdminRole";
 import { getAllContent } from "@/lib/data";
 import { deleteContent } from "../../../actions";
 import { ContentForm } from "../ContentForm";
@@ -24,11 +25,13 @@ export default async function EditContentPage({ params }: { params: Promise<{ id
             Edit {content.type === "post" ? "post" : "page"}
           </h1>
         </div>
-        <form action={deleteContent.bind(null, content.id)}>
-          <ConfirmButton message={`Delete "${content.title}"?`} className="btn-ghost !text-rose-600">
-            Delete
-          </ConfirmButton>
-        </form>
+        <EditOnly>
+          <form action={deleteContent.bind(null, content.id)}>
+            <ConfirmButton message={`Delete "${content.title}"?`} className="btn-ghost !text-rose-600">
+              Delete
+            </ConfirmButton>
+          </form>
+        </EditOnly>
       </div>
       <ContentForm key={content.updatedAt} content={content} type={content.type} />
     </div>

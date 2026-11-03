@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { useCanEdit } from "@/components/AdminRole";
 import { FormMessage } from "@/components/FormMessage";
 import { Markdown } from "@/components/Markdown";
 import { SubmitButton } from "@/components/SubmitButton";
@@ -9,11 +10,13 @@ import { saveContent } from "../../actions";
 
 export function ContentForm({ content, type }: { content?: Content; type: "page" | "post" }) {
   const [state, action] = useActionState(saveContent, undefined);
+  const canEdit = useCanEdit();
   const [body, setBody] = useState(content?.body ?? "");
   const [tab, setTab] = useState<"write" | "preview">("write");
 
   return (
     <form action={action} className="grid gap-6 lg:grid-cols-[1fr_18rem]">
+      <fieldset disabled={!canEdit} className="contents">
       {content && <input type="hidden" name="id" value={content.id} />}
       <input type="hidden" name="type" value={type} />
 
@@ -114,8 +117,9 @@ export function ContentForm({ content, type }: { content?: Content; type: "page"
           </div>
         </div>
         <FormMessage state={state} />
-        <SubmitButton className="btn-primary w-full">{content ? "Save changes" : "Create"}</SubmitButton>
+        {canEdit && <SubmitButton className="btn-primary w-full">{content ? "Save changes" : "Create"}</SubmitButton>}
       </aside>
+      </fieldset>
     </form>
   );
 }

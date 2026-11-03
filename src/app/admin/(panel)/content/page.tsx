@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { EditOnly } from "@/components/AdminRole";
 import { IconExternal, IconPlus } from "@/components/Icons";
 import { formatDate, getAllContent } from "@/lib/data";
 
@@ -17,6 +18,7 @@ export default async function ContentPage() {
           <h1 className="font-display text-2xl font-bold text-slate-900">Pages & News</h1>
           <p className="text-sm text-slate-500">Manage the content of your public website</p>
         </div>
+        <EditOnly>
         <div className="flex gap-2">
           <Link href="/admin/content/new?type=page" className="btn-secondary">
             <IconPlus className="size-4" /> New page
@@ -25,6 +27,7 @@ export default async function ContentPage() {
             <IconPlus className="size-4" /> New post
           </Link>
         </div>
+        </EditOnly>
       </div>
 
       <ContentList title="Pages" items={pages} hrefPrefix="/" empty="No pages yet. Create an About or Contact page." />
