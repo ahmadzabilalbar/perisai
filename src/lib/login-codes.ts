@@ -9,9 +9,9 @@ const TTL_MS = 10 * 60 * 1000; // code valid for 10 minutes
 const MAX_ATTEMPTS = 5;
 const RESEND_AFTER_MS = 60 * 1000;
 
-/** Email login works when SMTP is set up; in local development codes are printed to the server console instead. */
+/** Email-code sign-in is offered only when SMTP is set up. */
 export function isEmailLoginEnabled() {
-  return isMailConfigured() || process.env.NODE_ENV !== "production";
+  return isMailConfigured();
 }
 
 function hash(email: string, code: string) {
@@ -40,10 +40,6 @@ export async function sendLoginCode(email: string, siteName: string) {
   if (existing) await update("LoginCodes", email, row, "email");
   else await insert("LoginCodes", row);
 
-  if (!isMailConfigured()) {
-    console.log(`\n[dev] ${siteName} sign-in code for ${email}: ${code}\n`);
-    return;
-  }
   await sendMail({
     to: email,
     subject: `${code} is your ${siteName} admin sign-in code`,

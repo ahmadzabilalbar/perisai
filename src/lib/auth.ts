@@ -2,8 +2,8 @@ import "server-only";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { SignJWT, jwtVerify } from "jose";
-import { createHash, timingSafeEqual } from "node:crypto";
 import { getUsers } from "./data";
+import { verifyPassword } from "./passwords";
 
 const COOKIE = "perisai_admin";
 const MAX_AGE = 60 * 60 * 24 * 7; // 7 days
@@ -14,22 +14,13 @@ function secret() {
   return new TextEncoder().encode(s);
 }
 
-export function checkPassword(input: string) {
-  const expected = process.env.ADMIN_PASSWORD;
-  if (!expected) return false;
-  // Compare fixed-length hashes so the comparison is constant-time
-  const a = createHash("sha256").update(input).digest();
-  const b = createHash("sha256").update(expected).digest();
-  return timingSafeEqual(a, b);
-}
-
 /**
- * superadmin – Google accounts in SUPERADMIN_EMAILS; everything incl. managing users
- * admin      – can view and update (Users sheet, or the shared ADMIN_PASSWORD)
+ * superadmin – emails in SUPERADMIN_EMAILS; everything incl. managing users
+ * admin      – can view and update (Users sheet)
  * viewer     – can view every admin page but cannot update anything
  */
 export type Role = "superadmin" | "admin" | "viewer";
-export type Session = { role: Role; email?: string };
+export type Session = { role: Role; email: string };
 
 export const canEdit = (role: Role) => role === "superadmin" || role === "admin";
 
@@ -41,7 +32,17 @@ export function superAdminEmails() {
     .filter(Boolean);
 }
 
-export const isPasswordLoginEnabled = () => Boolean(process.env.ADMIN_PASSWORD);
+/**
+ * Email + password sign-in. Returns the session to create, or null.
+ * Passwords are set per user by the super admin in Users & access.
+ */
+export async function checkUserPassword(email: string, password: string): Promise<Session | null> {
+  const e = email.trim().toLowerCase();
+  const user = (await getUsers()).find((u) => u.email === e);
+  if (!user?.passwordHash || !(await verifyPassword(password, user.passwordHash))) return null;
+  const role = await roleForEmail(e);
+  return role ? { role, email: e } : null;
+}
 
 /** Signed session cookie (name, value, options), usable with cookies() or a NextResponse. */
 export async function sessionCookie(session: Session) {
@@ -63,7 +64,7 @@ export async function sessionCookie(session: Session) {
   ] as const;
 }
 
-export async function createSession(session: Session = { role: "admin" }) {
+export async function createSession(session: Session) {
   (await cookies()).set(...(await sessionCookie(session)));
 }
 
@@ -71,7 +72,7 @@ export async function destroySession() {
   (await cookies()).delete(COOKIE);
 }
 
-/** Role for a Google account right now, or null if it has no access. */
+/** Current role for an email, or null if it has no access. */
 export async function roleForEmail(email: string): Promise<Role | null> {
   const e = email.trim().toLowerCase();
   if (superAdminEmails().includes(e)) return "superadmin";
@@ -88,13 +89,10 @@ export async function getSession(): Promise<Session | null> {
   } catch {
     return null;
   }
-  const email = typeof payload.email === "string" ? payload.email : undefined;
-  // Google sessions: re-check the access list so removals and role changes apply immediately
-  if (email) {
-    const role = await roleForEmail(email);
-    return role ? { role, email } : null;
-  }
-  return payload.role === "admin" ? { role: "admin" } : null;
+  if (typeof payload.email !== "string") return null; // e.g. old shared-password sessions
+  // Re-check the access list so removals and role changes apply immediately
+  const role = await roleForEmail(payload.email);
+  return role ? { role, email: payload.email } : null;
 }
 
 export async function isAdmin() {

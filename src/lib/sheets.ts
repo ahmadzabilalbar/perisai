@@ -46,7 +46,7 @@ export const TABLES = {
   ],
   Settings: ["key", "value"],
   // Google accounts allowed into /admin (super admins come from SUPERADMIN_EMAILS instead)
-  Users: ["email", "role", "name", "addedBy", "createdAt"], // role: admin | viewer
+  Users: ["email", "role", "name", "addedBy", "createdAt", "passwordHash", "passwordUpdatedAt"], // role: admin | viewer
   // One-time sign-in codes for email login (only a hash of the code is stored)
   LoginCodes: ["email", "codeHash", "expiresAt", "attempts", "createdAt"],
 } as const;

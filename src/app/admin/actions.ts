@@ -3,7 +3,7 @@
 import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import {
-  checkPassword,
+  checkUserPassword,
   createSession,
   destroySession,
   requireEditor,
@@ -12,6 +12,7 @@ import {
   superAdminEmails,
 } from "@/lib/auth";
 import { isEmailLoginEnabled, sendLoginCode, verifyLoginCode } from "@/lib/login-codes";
+import { MIN_PASSWORD_LENGTH, hashPassword } from "@/lib/passwords";
 import { insert, newId, nowIso, remove, replaceAll, update } from "@/lib/sheets";
 import {
   DEFAULT_SETTINGS,
@@ -44,12 +45,14 @@ function slugify(s: string) {
 
 // ---------------- Auth ----------------
 
+/** Email + password sign-in (passwords are set per user in Users & access). */
 export async function login(_: FormState, fd: FormData): Promise<FormState> {
-  if (!checkPassword(str(fd, "password"))) {
-    await new Promise((r) => setTimeout(r, 600)); // slow down guessing
-    return { error: "Incorrect password." };
+  const session = await checkUserPassword(str(fd, "email"), String(fd.get("password") ?? ""));
+  if (!session) {
+    await new Promise((r) => setTimeout(r, 800)); // slow down guessing
+    return { error: "Incorrect email or password." };
   }
-  await createSession();
+  await createSession(session);
   redirect("/admin");
 }
 
@@ -287,21 +290,62 @@ export async function saveSettings(_: FormState, fd: FormData): Promise<FormStat
 
 // ---------------- Users (super admin only) ----------------
 
+function checkNewPassword(password: string) {
+  if (password.length < MIN_PASSWORD_LENGTH) return `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`;
+  return null;
+}
+
 export async function addUser(_: FormState, fd: FormData): Promise<FormState> {
   const me = await requireSuperAdmin();
   const email = str(fd, "email").toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Please enter a valid Google email address." };
+  const password = String(fd.get("password") ?? "");
+  if (!EMAIL_RE.test(email)) return { error: "Please enter a valid email address." };
   if (superAdminEmails().includes(email)) return { error: "That account is already a super admin." };
   if ((await getUsers()).some((u) => u.email === email)) return { error: `${email} has already been added.` };
+  const pwError = checkNewPassword(password);
+  if (pwError) return { error: pwError };
 
   try {
     // New admins always start as view-only; the super admin upgrades them later
-    await insert("Users", { email, role: "viewer", name: str(fd, "name"), addedBy: me.email ?? "", createdAt: nowIso() });
+    await insert("Users", {
+      email,
+      role: "viewer",
+      name: str(fd, "name"),
+      addedBy: me.email,
+      createdAt: nowIso(),
+      passwordHash: await hashPassword(password),
+      passwordUpdatedAt: nowIso(),
+    });
   } catch (e) {
     return { error: (e as Error).message };
   }
   updateTag(TAGS.users);
-  return { ok: `${email} added with view-only access.` };
+  return { ok: `${email} added with view-only access. Share the password with them securely.` };
+}
+
+/** Super admin sets or resets anyone's password (including their own). */
+export async function setUserPassword(_: FormState, fd: FormData): Promise<FormState> {
+  const me = await requireSuperAdmin();
+  const email = str(fd, "email").toLowerCase();
+  const password = String(fd.get("password") ?? "");
+  const pwError = checkNewPassword(password);
+  if (pwError) return { error: pwError };
+
+  const record = { passwordHash: await hashPassword(password), passwordUpdatedAt: nowIso() };
+  try {
+    if ((await getUsers()).some((u) => u.email === email)) {
+      await update("Users", email, record, "email");
+    } else if (superAdminEmails().includes(email)) {
+      // Super admins aren't normally listed in the sheet; add a row just to hold the password
+      await insert("Users", { email, role: "admin", name: "", addedBy: me.email, createdAt: nowIso(), ...record });
+    } else {
+      return { error: "User not found." };
+    }
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+  updateTag(TAGS.users);
+  return { ok: "Password updated." };
 }
 
 export async function setUserRole(email: string, role: "admin" | "viewer") {

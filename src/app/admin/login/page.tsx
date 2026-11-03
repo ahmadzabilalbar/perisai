@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { isAdmin, isPasswordLoginEnabled } from "@/lib/auth";
+import { isAdmin } from "@/lib/auth";
 import { isGoogleLoginEnabled } from "@/lib/google-oauth";
 import { LogoMark } from "@/components/Logo";
 import { isEmailLoginEnabled } from "@/lib/login-codes";
@@ -21,7 +21,7 @@ function Divider({ children }: { children: React.ReactNode }) {
 export const metadata: Metadata = { title: "Admin sign in" };
 
 const ERRORS: Record<string, string> = {
-  not_allowed: "This Google account does not have access. Ask the PERISAI super admin to add you.",
+  not_allowed: "This account does not have access. Ask the PERISAI super admin to add you.",
   google_failed: "Google sign-in failed. Please try again.",
   google_disabled: "Google sign-in is not configured yet.",
 };
@@ -30,7 +30,6 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   if (await isAdmin()) redirect("/admin");
   const { error } = await searchParams;
   const google = isGoogleLoginEnabled();
-  const password = isPasswordLoginEnabled();
   const email = isEmailLoginEnabled();
 
   return (
@@ -64,28 +63,19 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             </a>
           )}
 
-          {google && email && <Divider>or sign in with email</Divider>}
+          {google && <Divider>or sign in with email and password</Divider>}
 
-          {email && <EmailLogin />}
+          <LoginForm />
 
-          {password &&
-            (google || email ? (
-              <details className="group pt-1">
-                <summary className="cursor-pointer list-none text-center text-xs text-slate-400 hover:text-slate-600">
-                  Use admin password
-                </summary>
-                <div className="mt-3">
-                  <LoginForm />
-                </div>
-              </details>
-            ) : (
-              <LoginForm />
-            ))}
-
-          {!google && !email && !password && (
-            <p className="text-sm text-slate-600">
-              No sign-in method is configured. Set up Google sign-in, email (SMTP) or <code>ADMIN_PASSWORD</code>.
-            </p>
+          {email && (
+            <details className="pt-1">
+              <summary className="cursor-pointer list-none text-center text-xs text-slate-400 hover:text-slate-600">
+                Forgot password? Email me a sign-in code
+              </summary>
+              <div className="mt-3">
+                <EmailLogin />
+              </div>
+            </details>
           )}
         </div>
 

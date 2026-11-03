@@ -201,7 +201,7 @@ export async function getSettings(): Promise<Settings> {
   return merged;
 }
 
-// ---------- Admin users (Google sign-in) ----------
+// ---------- Admin users (Google or email + password sign-in) ----------
 
 export type UserRole = "admin" | "viewer";
 
@@ -211,6 +211,9 @@ export interface AdminUser {
   name: string;
   addedBy: string;
   createdAt: string;
+  /** scrypt hash; server-only, never send to the browser */
+  passwordHash: string;
+  passwordUpdatedAt: string;
 }
 
 export const getUsers = unstable_cache(

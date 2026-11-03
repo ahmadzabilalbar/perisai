@@ -4,19 +4,24 @@ import { requireSuperAdmin, superAdminEmails } from "@/lib/auth";
 import { formatDate, getUsers } from "@/lib/data";
 import { removeUser, setUserRole } from "../../actions";
 import { AddUserForm } from "./AddUserForm";
+import { SetPasswordButton } from "./SetPasswordButton";
 
 export const metadata: Metadata = { title: "Users & access" };
 
 export default async function UsersPage() {
   await requireSuperAdmin();
-  const users = (await getUsers()).sort((a, b) => a.email.localeCompare(b.email));
+  const all = await getUsers();
+  const supers = superAdminEmails();
+  // Super admins may have a row only to hold their password; list them separately
+  const users = all.filter((u) => !supers.includes(u.email)).sort((a, b) => a.email.localeCompare(b.email));
+  const hasPassword = (email: string) => Boolean(all.find((u) => u.email === email)?.passwordHash);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
         <h1 className="font-display text-2xl font-bold text-slate-900">Users & access</h1>
         <p className="text-sm text-slate-500">
-          People who can sign in to the admin area with their Google account. New users start with{" "}
+          People who can sign in to the admin area, with their email and password (or Google). New users start with{" "}
           <strong>view-only</strong> access; upgrade them to <strong>Admin</strong> when they need to make changes.
         </p>
       </div>
@@ -26,13 +31,18 @@ export default async function UsersPage() {
       <section className="card overflow-hidden">
         <h2 className="border-b border-slate-100 px-5 py-4 font-semibold text-slate-900">Access list</h2>
         <ul className="divide-y divide-slate-100">
-          {superAdminEmails().map((email) => (
+          {supers.map((email) => (
             <li key={email} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
               <div className="min-w-0">
                 <p className="truncate font-medium text-slate-900">{email}</p>
-                <p className="text-xs text-slate-500">Full access, manages users</p>
+                <p className="text-xs text-slate-500">
+                  Full access, manages users · {hasPassword(email) ? "Password set" : "Google sign-in only"}
+                </p>
               </div>
-              <RoleBadge role="superadmin" />
+              <div className="flex flex-wrap items-center gap-2">
+                <RoleBadge role="superadmin" />
+                <SetPasswordButton email={email} label={hasPassword(email) ? "Change my password" : "Set my password"} />
+              </div>
             </li>
           ))}
           {users.map((u) => (
@@ -40,7 +50,8 @@ export default async function UsersPage() {
               <div className="min-w-0">
                 <p className="truncate font-medium text-slate-900">{u.name || u.email}</p>
                 <p className="truncate text-xs text-slate-500">
-                  {u.name ? `${u.email} · ` : ""}Added {formatDate(u.createdAt)}
+                  {u.name ? `${u.email} · ` : ""}Added {formatDate(u.createdAt)} ·{" "}
+                  {u.passwordHash ? `Password set ${formatDate(u.passwordUpdatedAt)}` : "No password"}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -50,6 +61,7 @@ export default async function UsersPage() {
                     {u.role === "admin" ? "Change to view only" : "Upgrade to admin"}
                   </button>
                 </form>
+                <SetPasswordButton email={u.email} label={u.passwordHash ? "Reset password" : "Set password"} />
                 <form action={removeUser.bind(null, u.email)}>
                   <ConfirmButton
                     message={`Remove ${u.email}? They will lose access immediately.`}

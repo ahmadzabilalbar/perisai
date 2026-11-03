@@ -5,13 +5,13 @@ A membership management system with a public website, built on **Next.js 16 + Ta
 ## Features
 
 **Admin (`/admin`)**
-- **Sign in with Google** with three roles:
-  - **Super admin**: Gmail addresses in `SUPERADMIN_EMAILS`. Full access, plus **Users & access** to add people.
+- **Sign in** with **email + password** (set per user by the super admin) or **Google**, with three roles:
+  - **Super admin**: addresses in `SUPERADMIN_EMAILS`. Full access, plus **Users & access** to add people, set and reset passwords, and change roles.
   - **Admin**: can view and update everything.
   - **View only**: can see every admin page but cannot change anything. New users always start here, and the super admin upgrades them to Admin when needed.
   - Role changes and removals take effect immediately, with no re-login needed.
-- **Sign in with an email code**: works with any address on the access list (e.g. `name@uum.edu.my`). A 6-digit code is emailed, valid for 10 minutes, with a maximum of 5 attempts, and can be used only once
-- Optional shared admin password (`ADMIN_PASSWORD`) as a fallback, with Admin role
+- Passwords are stored as scrypt hashes in the `Users` sheet, never in plain text
+- Optional **email sign-in codes** ("Forgot password?"), shown only when SMTP is configured
 - Dashboard: member counts, fees collected this year, members needing attention, recent payments
 - Members: search, filter by status/type, CSV export, add/edit/delete
 - Fees for **Annual** and **Lifetime** membership:
@@ -38,7 +38,7 @@ The app **creates the tabs and header rows automatically** on first use:
 | `Payments` | Payment log (one row per payment) |
 | `Content` | Pages and news posts |
 | `Settings` | Key/value website settings |
-| `Users` | Email addresses with admin access and their role (`admin` / `viewer`) |
+| `Users` | Email addresses with admin access, their role (`admin` / `viewer`) and password hash |
 | `LoginCodes` | Temporary email sign-in codes (hashed; removed after use) |
 
 You can also view or edit data directly in the sheet. Changes made in the sheet appear on the site within about 5 minutes, or immediately after any admin save.
@@ -61,7 +61,6 @@ Copy `.env.example` to `.env.local` and fill in:
 
 | Variable | Value |
 | --- | --- |
-| `ADMIN_PASSWORD` | The password for `/admin` |
 | `AUTH_SECRET` | A long random string, e.g. output of `openssl rand -base64 32` |
 | `GOOGLE_SHEET_ID` | Sheet ID from step 1 |
 | `GOOGLE_SERVICE_ACCOUNT_EMAIL` | `client_email` from the JSON key |
@@ -86,7 +85,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000 and sign in at http://localhost:3000/admin.
+Open http://localhost:3000 and sign in at http://localhost:3000/admin. The super admin signs in with Google first, then sets passwords in **Users & access**, including their own.
 
 ### 4. Deploy to Vercel
 
