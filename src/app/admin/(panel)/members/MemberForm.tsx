@@ -19,7 +19,17 @@ export function MemberForm({ member }: { member?: Member }) {
           <input name="name" required defaultValue={member?.name} className="input" />
         </Field>
         <Field label="UUM staff number *">
-          <input name="staffNo" required defaultValue={member?.staffNo} className="input uppercase" />
+          <input
+            name="staffNo"
+            required
+            inputMode="numeric"
+            minLength={4}
+            maxLength={5}
+            pattern="\d{4,5}"
+            title="UUM staff number (4 or 5 digits)"
+            defaultValue={member?.staffNo}
+            className="input font-mono tracking-widest"
+          />
         </Field>
         <Field label="Email">
           <input name="email" type="email" defaultValue={member?.email} className="input" />

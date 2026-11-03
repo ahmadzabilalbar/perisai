@@ -22,7 +22,7 @@ export async function submitJoin(_: JoinState, fd: FormData): Promise<JoinState>
   if (!name || !email || !phone || !str(fd, "staffNo")) {
     return { error: "Please fill in your name, UUM staff number, email and phone number." };
   }
-  if (!staffNo) return { error: "Please enter a valid UUM staff number." };
+  if (!staffNo) return { error: "UUM staff number must be 4 or 5 digits." };
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Please enter a valid email address." };
 
   const members = await getMembers();

@@ -35,6 +35,24 @@ export function JoinForm({
 
   return (
     <form action={action} className="card space-y-5 p-6 sm:p-8">
+      <div>
+        <label className="label" htmlFor="staffNo">UUM staff number *</label>
+        <input
+          id="staffNo"
+          name="staffNo"
+          required
+          autoFocus
+          inputMode="numeric"
+          minLength={4}
+          maxLength={5}
+          pattern="\d{4,5}"
+          title="UUM staff number (4 or 5 digits)"
+          placeholder="e.g. 1234"
+          className="input max-w-40 font-mono tracking-widest"
+          autoComplete="off"
+        />
+      </div>
+
       <fieldset>
         <legend className="label">Membership plan</legend>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -63,23 +81,9 @@ export function JoinForm({
       </fieldset>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <div>
+        <div className="sm:col-span-2">
           <label className="label" htmlFor="name">Full name *</label>
           <input id="name" name="name" required className="input" autoComplete="name" />
-        </div>
-        <div>
-          <label className="label" htmlFor="staffNo">UUM staff number *</label>
-          <input
-            id="staffNo"
-            name="staffNo"
-            required
-            minLength={3}
-            maxLength={15}
-            pattern="[A-Za-z0-9\-\s]{3,15}"
-            title="Your UUM staff number (letters and numbers only)"
-            className="input uppercase"
-            autoComplete="off"
-          />
         </div>
         <div>
           <label className="label" htmlFor="email">Email *</label>

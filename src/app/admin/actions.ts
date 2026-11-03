@@ -62,7 +62,7 @@ export async function saveMember(_: FormState, fd: FormData): Promise<FormState>
   const name = str(fd, "name");
   if (!name) return { error: "Name is required." };
   const staffNo = normalizeStaffNo(str(fd, "staffNo"));
-  if (!staffNo) return { error: "A valid UUM staff number is required." };
+  if (!staffNo) return { error: "UUM staff number must be 4 or 5 digits." };
   if ((await getMembers()).some((m) => m.staffNo === staffNo && m.id !== id)) {
     return { error: `Staff number ${staffNo} is already registered to another member.` };
   }
