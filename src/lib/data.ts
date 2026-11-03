@@ -72,23 +72,23 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  siteName: "Perisai",
-  tagline: "A community that protects and empowers",
-  heroTitle: "Together, we are stronger.",
+  siteName: "PERISAI",
+  tagline: "Persatuan Staf UUM Yang Mempunyai Anak Istimewa",
+  heroTitle: "Together, we support every special child.",
   heroSubtitle:
-    "Join a growing community of members working together. Become a member today and be part of something meaningful.",
+    "PERISAI brings together UUM staff who are raising children with special needs, so no family walks this journey alone. Join us for support, information and a caring community.",
   heroImage: "",
-  aboutTitle: "About us",
+  aboutTitle: "About PERISAI",
   aboutBody:
-    "We are a non-profit association dedicated to supporting our members through programmes, events and a strong network.\n\nEdit this text from **Admin → Website settings**.",
+    "**PERISAI (Persatuan Staf UUM Yang Mempunyai Anak Istimewa)** is an association of Universiti Utara Malaysia staff who have children with special needs.\n\nWe provide a support network for families, share information and resources, organise programmes and activities for our members and their children, and advocate for a more inclusive campus community.",
   annualFee: "50",
   lifetimeFee: "500",
   currency: "RM",
   feeNotes: "Annual membership is valid for 12 months from the date of payment.",
   bankDetails: "",
-  contactEmail: "hello@example.com",
+  contactEmail: "",
   contactPhone: "",
-  address: "",
+  address: "Universiti Utara Malaysia\n06010 UUM Sintok, Kedah",
   facebook: "",
   instagram: "",
   joinEnabled: "TRUE",
