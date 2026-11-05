@@ -136,6 +136,14 @@ export const getMembers = unstable_cache(
   { tags: [TAGS.members], revalidate: REVALIDATE },
 );
 
+/** A member without the secret update-link token: the only shape to pass to client components. */
+export type MemberView = Omit<Member, "editToken">;
+
+export function withoutToken(m: Member): MemberView {
+  const { editToken: _token, ...rest } = m;
+  return rest;
+}
+
 export async function getMember(id: string) {
   return (await getMembers()).find((m) => m.id === id) ?? null;
 }

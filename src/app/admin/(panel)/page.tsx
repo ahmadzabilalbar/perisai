@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { EditOnly } from "@/components/AdminRole";
+import { EditOnly } from "@/components/EditOnly";
 import { StatusBadge } from "@/components/StatusBadge";
 import { IconArrowRight, IconPlus } from "@/components/Icons";
 import {

@@ -2,8 +2,10 @@ import "server-only";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { SignJWT, jwtVerify } from "jose";
+import { cache } from "react";
 import { getUsers } from "./data";
-import { verifyPassword } from "./passwords";
+import { withLockout } from "./login-guard";
+import { MAX_PASSWORD_LENGTH, verifyPassword } from "./passwords";
 
 const COOKIE = "perisai_admin";
 const MAX_AGE = 60 * 60 * 24 * 7; // 7 days
@@ -33,17 +35,24 @@ export function superAdminEmails() {
 }
 
 /**
- * Email + password sign-in. Returns the session to create, or null.
+ * Email + password sign-in. Returns the session to create, `locked` after too many wrong
+ * passwords (see login-guard.ts), or an empty object for a wrong login.
  * Passwords are set per user by the super admin in Users & access.
+ * `login` is an email address or a username (anything without "@").
  */
-/** `login` is an email address or a username (anything without "@"). */
-export async function checkUserPassword(login: string, password: string): Promise<Session | null> {
+export async function checkUserPassword(
+  login: string,
+  password: string,
+): Promise<{ session?: Session; locked?: boolean }> {
   const l = login.trim().toLowerCase();
-  if (!l) return null;
+  if (!l || !password || password.length > MAX_PASSWORD_LENGTH) return {};
   const user = (await getUsers()).find((u) => (l.includes("@") ? u.email === l : u.username === l));
-  if (!user?.passwordHash || !(await verifyPassword(password, user.passwordHash))) return null;
+  if (!user?.passwordHash) return {};
+  const result = await withLockout(`pw:${user.email}`, () => verifyPassword(password, user.passwordHash));
+  if (result === "locked") return { locked: true };
+  if (result !== "ok") return {};
   const role = await roleForEmail(user.email);
-  return role ? { role, email: user.email } : null;
+  return role ? { session: { role, email: user.email } } : {};
 }
 
 /** Signed session cookie (name, value, options), usable with cookies() or a NextResponse. */
@@ -82,7 +91,8 @@ export async function roleForEmail(email: string): Promise<Role | null> {
   return user ? user.role : null;
 }
 
-export async function getSession(): Promise<Session | null> {
+/** Checked once per request: layouts, pages and <EditOnly> all call this. */
+export const getSession = cache(async (): Promise<Session | null> => {
   const token = (await cookies()).get(COOKIE)?.value;
   if (!token) return null;
   let payload;
@@ -95,7 +105,7 @@ export async function getSession(): Promise<Session | null> {
   // Re-check the access list so removals and role changes apply immediately
   const role = await roleForEmail(payload.email);
   return role ? { role, email: payload.email } : null;
-}
+});
 
 export async function isAdmin() {
   return (await getSession()) !== null;

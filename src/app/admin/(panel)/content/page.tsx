@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { EditOnly } from "@/components/AdminRole";
+import { EditOnly } from "@/components/EditOnly";
 import { IconExternal, IconPlus } from "@/components/Icons";
 import { formatDate, getAllContent } from "@/lib/data";
 

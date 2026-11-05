@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ConfirmButton } from "@/components/ConfirmButton";
-import { EditOnly } from "@/components/AdminRole";
+import { EditOnly } from "@/components/EditOnly";
 import { IconChat } from "@/components/Icons";
 import {
   daysUntil,
@@ -17,6 +17,7 @@ import {
   memberState,
   type MembershipType,
   whatsappShareUrl,
+  withoutToken,
 } from "@/lib/data";
 import { deleteMember, setFeeStatus } from "../../../actions";
 import { MemberForm } from "../MemberForm";
@@ -82,7 +83,7 @@ export default async function MemberPage({ params }: Props) {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
         <div className="order-2 lg:order-1">
-          <MemberForm key={m.updatedAt} member={m} childList={childList} />
+          <MemberForm key={m.updatedAt} member={withoutToken(m)} childList={childList} />
         </div>
 
         <aside className="order-1 space-y-6 lg:order-2">
@@ -134,6 +135,7 @@ export default async function MemberPage({ params }: Props) {
             </EditOnly>
           </div>
 
+          {/* Server-side EditOnly: viewers never receive the token */}
           <EditOnly>
             <EditLinkCard memberId={m.id} name={m.name} token={m.editToken} />
           </EditOnly>

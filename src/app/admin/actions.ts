@@ -14,7 +14,8 @@ import {
 } from "@/lib/auth";
 import { isEmailLoginEnabled, sendLoginCode, verifyLoginCode } from "@/lib/login-codes";
 import { parseChildren, saveChildren } from "@/lib/children";
-import { MIN_PASSWORD_LENGTH, hashPassword } from "@/lib/passwords";
+import { LOCK_MINUTES } from "@/lib/login-guard";
+import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH, hashPassword } from "@/lib/passwords";
 import { insert, newId, nowIso, remove, replaceAll, update } from "@/lib/sheets";
 import {
   DEFAULT_SETTINGS,
@@ -49,9 +50,21 @@ function slugify(s: string) {
 
 /** Email + password sign-in (passwords are set per user in Users & access). */
 export async function login(_: FormState, fd: FormData): Promise<FormState> {
-  const session = await checkUserPassword(str(fd, "login"), String(fd.get("password") ?? ""));
+  let result: Awaited<ReturnType<typeof checkUserPassword>>;
+  try {
+    result = await checkUserPassword(str(fd, "login"), String(fd.get("password") ?? ""));
+  } catch (e) {
+    console.error("Password sign-in failed", e);
+    return { error: "Log masuk tidak dapat diproses. Sila cuba lagi sebentar lagi." };
+  }
+  const { session, locked } = result;
   if (!session) {
     await new Promise((r) => setTimeout(r, 800)); // slow down guessing
+    if (locked) {
+      return {
+        error: `Terlalu banyak cubaan yang gagal. Akaun ini dikunci selama ${LOCK_MINUTES} minit. Anda masih boleh log masuk dengan Google atau kod e-mel.`,
+      };
+    }
     return { error: "E-mel/nama pengguna atau kata laluan tidak sah." };
   }
   await createSession(session);
@@ -321,6 +334,7 @@ export async function saveSettings(_: FormState, fd: FormData): Promise<FormStat
 
 function checkNewPassword(password: string) {
   if (password.length < MIN_PASSWORD_LENGTH) return `Kata laluan mesti sekurang-kurangnya ${MIN_PASSWORD_LENGTH} aksara.`;
+  if (password.length > MAX_PASSWORD_LENGTH) return `Kata laluan tidak boleh melebihi ${MAX_PASSWORD_LENGTH} aksara.`;
   return null;
 }
 

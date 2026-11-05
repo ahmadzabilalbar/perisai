@@ -67,6 +67,8 @@ export const TABLES = {
   Users: ["email", "role", "name", "addedBy", "createdAt", "passwordHash", "passwordUpdatedAt", "username"],
   // One-time sign-in codes for email login (only a hash of the code is stored)
   LoginCodes: ["email", "codeHash", "expiresAt", "attempts", "createdAt"],
+  // Failed password sign-ins per account (key = "pw:<email>"); the row is removed after a successful sign-in
+  LoginAttempts: ["key", "failures", "firstFailureAt", "lockedUntil"],
 } as const;
 
 export type TableName = keyof typeof TABLES;

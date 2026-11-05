@@ -6,10 +6,10 @@ import { ChildrenFields } from "@/components/ChildrenFields";
 import { FormMessage } from "@/components/FormMessage";
 import { SubmitButton } from "@/components/SubmitButton";
 import { FEE_STATUS_LABEL, MEMBERSHIP_LABEL, addYears } from "@/lib/format";
-import type { Child, Member } from "@/lib/data";
+import type { Child, MemberView } from "@/lib/data";
 import { saveMember } from "../../actions";
 
-export function MemberForm({ member, childList = [] }: { member?: Member; childList?: Child[] }) {
+export function MemberForm({ member, childList = [] }: { member?: MemberView; childList?: Child[] }) {
   const [state, action] = useActionState(saveMember, undefined);
   const canEdit = useCanEdit();
   const [type, setType] = useState(member?.membershipType ?? "Annual");

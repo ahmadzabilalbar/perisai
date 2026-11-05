@@ -9,9 +9,5 @@ export function AdminRoleProvider({ canEdit, children }: { canEdit: boolean; chi
   return <CanEditContext.Provider value={canEdit}>{children}</CanEditContext.Provider>;
 }
 
+/** For disabling inputs in client forms. To hide something from viewers, use the server <EditOnly> instead. */
 export const useCanEdit = () => useContext(CanEditContext);
-
-/** Renders children only for users who can edit. */
-export function EditOnly({ children }: { children: React.ReactNode }) {
-  return useCanEdit() ? <>{children}</> : null;
-}

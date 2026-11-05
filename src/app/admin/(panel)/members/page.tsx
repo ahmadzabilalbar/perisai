@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { EditOnly } from "@/components/AdminRole";
+import { EditOnly } from "@/components/EditOnly";
 import { IconPlus } from "@/components/Icons";
-import { getChildren, getMembers, memberState, splitOkuTypes, type MemberState } from "@/lib/data";
+import { getChildren, getMembers, memberState, splitOkuTypes, withoutToken, type MemberState } from "@/lib/data";
 import { MembersTable, type ChildFilter, type TypeFilter } from "./MembersTable";
 
 export const metadata: Metadata = { title: "Ahli" };
@@ -22,7 +22,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
   const members = all.map((m) => {
     const mine = children.filter((c) => c.memberId === m.id);
     return {
-      ...m,
+      ...withoutToken(m), // this list goes to a client component: never include update-link tokens
       state: memberState(m),
       childCount: mine.length,
       childNames: mine.map((c) => c.name).join(", "),

@@ -4,7 +4,7 @@
 //   node --env-file=.env.local scripts/reset-data.mjs --apply          # deletes it
 //   node --env-file=.env.local scripts/reset-data.mjs --apply --keep-content   # keeps pages and news
 //
-// Cleared: Members, Children, Payments, LoginCodes and (unless --keep-content) Content.
+// Cleared: Members, Children, Payments, LoginCodes, LoginAttempts and (unless --keep-content) Content.
 // Never touched: Settings (website text, fees, bank details) and Users (admin accounts and passwords).
 //
 // Unlike dummy-*.mjs, this removes EVERY row in those tabs, including real records and anything
@@ -14,7 +14,7 @@ import { api, readRows } from "./sheet-lib.mjs";
 
 const apply = process.argv.includes("--apply");
 const keepContent = process.argv.includes("--keep-content");
-const TABS = ["Members", "Children", "Payments", "LoginCodes", ...(keepContent ? [] : ["Content"])];
+const TABS = ["Members", "Children", "Payments", "LoginCodes", "LoginAttempts", ...(keepContent ? [] : ["Content"])];
 
 const meta = await api("?fields=properties.title,sheets.properties(title,sheetId,gridProperties.rowCount)");
 const sheets = Object.fromEntries(meta.sheets.map((s) => [s.properties.title, s.properties]));

@@ -8,6 +8,8 @@ const scryptAsync = promisify(scrypt) as (pw: string, salt: Buffer, len: number)
 const KEY_LEN = 64;
 
 export const MIN_PASSWORD_LENGTH = 8;
+/** scrypt work grows with input length, so longer passwords are rejected before hashing. */
+export const MAX_PASSWORD_LENGTH = 128;
 
 export async function hashPassword(password: string) {
   const salt = randomBytes(16);

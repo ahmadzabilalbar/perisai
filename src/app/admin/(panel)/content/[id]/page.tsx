@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ConfirmButton } from "@/components/ConfirmButton";
-import { EditOnly } from "@/components/AdminRole";
+import { EditOnly } from "@/components/EditOnly";
 import { getAllContent } from "@/lib/data";
 import { deleteContent } from "../../../actions";
 import { ContentForm } from "../ContentForm";

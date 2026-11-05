@@ -5,9 +5,9 @@ import { useMemo, useState } from "react";
 import { StatusBadge } from "@/components/StatusBadge";
 import { IconDownload, IconSearch } from "@/components/Icons";
 import { formatDate, MEMBERSHIP_LABEL, STATE_LABEL, type MemberState } from "@/lib/format";
-import type { Member } from "@/lib/data";
+import type { MemberView } from "@/lib/data";
 
-type Row = Member & { state: MemberState; childCount: number; childNames: string; okuTypes: string };
+type Row = MemberView & { state: MemberState; childCount: number; childNames: string; okuTypes: string };
 
 const FILTERS: ("All" | MemberState)[] = ["All", "Active", "Lifetime", "Expiring", "Expired", "Unpaid", "Pending"];
 
