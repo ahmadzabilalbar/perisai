@@ -7,7 +7,20 @@ import { IconDownload, IconSearch } from "@/components/Icons";
 import { formatDate, MEMBERSHIP_LABEL, STATE_LABEL, type MemberState } from "@/lib/format";
 import type { MemberView } from "@/lib/data";
 
-type Row = MemberView & { state: MemberState; childCount: number; childNames: string; okuTypes: string };
+type Row = Pick<
+  MemberView,
+  | "id"
+  | "memberNo"
+  | "staffNo"
+  | "name"
+  | "email"
+  | "phone"
+  | "membershipType"
+  | "paidUntil"
+  | "lastPaymentDate"
+  | "lastPaymentAmount"
+  | "joinDate"
+> & { state: MemberState; childCount: number; childNames: string; okuTypes: string };
 
 const FILTERS: ("All" | MemberState)[] = ["All", "Active", "Lifetime", "Expiring", "Expired", "Unpaid", "Pending"];
 

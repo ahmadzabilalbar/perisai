@@ -4,11 +4,16 @@ import { useActionState, useEffect, useState } from "react";
 import { useCanEdit } from "@/components/AdminRole";
 import { FormMessage } from "@/components/FormMessage";
 import { IconExternal } from "@/components/Icons";
-import { Markdown } from "@/components/Markdown";
 import { formatDate, MARKDOWN_IMAGE, slugify } from "@/lib/format";
 import { SubmitButton } from "@/components/SubmitButton";
 import type { Content } from "@/lib/data";
 import { saveContent } from "../../actions";
+import dynamic from "next/dynamic";
+
+// react-markdown is only needed for the preview: keep it out of the editor's initial bundle
+const Markdown = dynamic(() => import("@/components/Markdown").then((m) => m.Markdown), {
+  loading: () => <p className="text-sm text-slate-400">Memuatkan pratonton...</p>,
+});
 import { BodyEditor } from "./BodyEditor";
 import { CoverImageInput } from "./CoverImageInput";
 

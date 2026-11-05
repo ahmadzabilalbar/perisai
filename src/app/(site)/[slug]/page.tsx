@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Markdown } from "@/components/Markdown";
-import { getContentBySlug } from "@/lib/data";
+import { getContentBySlug, getPublishedPages } from "@/lib/data";
 
 type Props = { params: Promise<{ slug: string }> };
+
+/** Builds published pages ahead of time; new ones are still rendered on their first visit. */
+export async function generateStaticParams() {
+  return (await getPublishedPages()).map((p) => ({ slug: p.slug }));
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const page = await getContentBySlug("page", (await params).slug);
@@ -27,7 +32,7 @@ export default async function CmsPage({ params }: Props) {
       <div className="mx-auto max-w-3xl px-4 sm:px-6">
         {page.coverImage && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={page.coverImage} alt="" className="mb-10 aspect-[16/9] w-full rounded-3xl object-cover" />
+          <img src={page.coverImage} alt="" width={1200} height={675} fetchPriority="high" className="mb-10 aspect-[16/9] w-full rounded-3xl object-cover" />
         )}
         <Markdown className="prose-lg">{page.body}</Markdown>
       </div>

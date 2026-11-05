@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { EditOnly } from "@/components/EditOnly";
 import { IconPlus } from "@/components/Icons";
-import { getChildren, getMembers, memberState, splitOkuTypes, withoutToken, type MemberState } from "@/lib/data";
+import { getChildren, getMembers, memberState, splitOkuTypes, type Child, type MemberState } from "@/lib/data";
 import { MembersTable, type ChildFilter, type TypeFilter } from "./MembersTable";
 import { requireStaff } from "@/lib/auth";
 
@@ -21,10 +21,23 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
     .split(",")
     .filter((s): s is MemberState => (STATES as string[]).includes(s));
   const [all, children] = await Promise.all([getMembers(), getChildren()]);
+  const byMember = new Map<string, Child[]>();
+  for (const c of children) byMember.set(c.memberId, [...(byMember.get(c.memberId) ?? []), c]);
   const members = all.map((m) => {
-    const mine = children.filter((c) => c.memberId === m.id);
+    const mine = byMember.get(m.id) ?? [];
+    // This list goes to the browser: only what the table and CSV export use (no address, notes or update-link token)
     return {
-      ...withoutToken(m), // this list goes to a client component: never include update-link tokens
+      id: m.id,
+      memberNo: m.memberNo,
+      staffNo: m.staffNo,
+      name: m.name,
+      email: m.email,
+      phone: m.phone,
+      membershipType: m.membershipType,
+      paidUntil: m.paidUntil,
+      lastPaymentDate: m.lastPaymentDate,
+      lastPaymentAmount: m.lastPaymentAmount,
+      joinDate: m.joinDate,
       state: memberState(m),
       childCount: mine.length,
       childNames: mine.map((c) => c.name).join(", "),

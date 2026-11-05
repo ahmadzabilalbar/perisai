@@ -43,6 +43,7 @@ export default async function HomePage() {
             <img
               src={s.heroImage}
               alt=""
+              fetchPriority="high"
               className="aspect-[4/3] w-full rounded-3xl object-cover shadow-2xl shadow-brand-900/10 ring-1 ring-slate-900/5"
             />
           ) : (

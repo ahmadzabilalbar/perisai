@@ -13,7 +13,15 @@ export function PostCard({
     >
       {post.coverImage ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={post.coverImage} alt="" className="aspect-[16/9] w-full object-cover" />
+        <img
+          src={post.coverImage}
+          alt=""
+          width={1200}
+          height={675}
+          loading="lazy"
+          decoding="async"
+          className="aspect-[16/9] w-full object-cover"
+        />
       ) : (
         <div className="aspect-[16/9] w-full bg-gradient-to-br from-brand-100 to-violet-100" />
       )}

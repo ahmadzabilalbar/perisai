@@ -19,6 +19,9 @@ function hash(email: string, code: string) {
   return createHash("sha256").update(`${email}:${code}:${process.env.AUTH_SECRET}`).digest("hex");
 }
 
+const escapeHtml = (s: string) =>
+  s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+
 async function findCode(email: string) {
   return (await readAll("LoginCodes")).find((r) => r.email === email) ?? null;
 }
@@ -46,7 +49,7 @@ export async function sendLoginCode(email: string, siteName: string) {
     subject: `${code} ialah kod log masuk pentadbir ${siteName} anda`,
     text: `Kod log masuk pentadbir ${siteName} anda ialah ${code}.\n\nKod ini akan tamat tempoh dalam masa 10 minit. Jika anda tidak memintanya, sila abaikan e-mel ini.`,
     html: `<div style="font-family:system-ui,sans-serif;max-width:420px;margin:auto;padding:24px;color:#0f172a">
-  <h2 style="margin:0 0 8px">Log masuk pentadbir ${siteName}</h2>
+  <h2 style="margin:0 0 8px">Log masuk pentadbir ${escapeHtml(siteName)}</h2>
   <p style="color:#475569">Gunakan kod ini untuk log masuk. Kod ini akan tamat tempoh dalam masa 10 minit.</p>
   <p style="font-size:32px;font-weight:700;letter-spacing:8px;margin:24px 0;color:#3b59e8">${code}</p>
   <p style="color:#94a3b8;font-size:13px">Jika anda tidak memintanya, sila abaikan e-mel ini.</p>

@@ -8,6 +8,7 @@ import {
   checkUserPassword,
   createSession,
   destroySession,
+  requireAdmin,
   requireContentEditor,
   requireEditor,
   requireSuperAdmin,
@@ -18,7 +19,7 @@ import { isEmailLoginEnabled, sendLoginCode, verifyLoginCode } from "@/lib/login
 import { parseChildren, saveChildren } from "@/lib/children";
 import { clientIp } from "@/lib/client-ip";
 import { rateLimit } from "@/lib/throttle";
-import { MARKDOWN_IMAGE, slugify, USER_ROLES, type UserRole } from "@/lib/format";
+import { isSafeUrl, MARKDOWN_IMAGE, slugify, USER_ROLES, type UserRole } from "@/lib/format";
 import { LOCK_MINUTES } from "@/lib/login-guard";
 import { insertMember } from "@/lib/members";
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH, hashPassword } from "@/lib/passwords";
@@ -149,6 +150,21 @@ export async function verifyLoginCodeAction(_: CodeState, fd: FormData): Promise
 }
 
 export async function logout() {
+  await destroySession();
+  redirect("/admin/login");
+}
+
+/** Signs the current user out on every device (e.g. after using a shared computer or losing a phone). */
+export async function logoutEverywhere() {
+  const me = await requireAdmin();
+  const now = nowIso();
+  if ((await getUsers()).some((u) => u.email === me.email)) {
+    await update("Users", me.email, { sessionsValidAfter: now }, "email");
+  } else {
+    // Super admins aren't normally listed in the sheet; add a row just to hold the cut-off
+    await insert("Users", { email: me.email, role: "admin", name: "", addedBy: me.email, createdAt: now, sessionsValidAfter: now });
+  }
+  updateTag(TAGS.users);
   await destroySession();
   redirect("/admin/login");
 }
@@ -338,6 +354,11 @@ export async function saveContent(_: FormState, fd: FormData): Promise<FormState
     return { error: `"${slug}" ialah URL yang dikhaskan. Sila pilih slug lain.` };
   }
 
+  const coverImage = str(fd, "coverImage");
+  if (coverImage && !isSafeUrl(coverImage, { allowPath: true })) {
+    return { error: "URL gambar muka depan tidak sah. Gunakan alamat bermula dengan https://." };
+  }
+
   const body = String(fd.get("body") ?? "");
   // News: the cover image is the only picture (pages may still embed images)
   if (type === "post" && MARKDOWN_IMAGE.test(body)) {
@@ -355,7 +376,7 @@ export async function saveContent(_: FormState, fd: FormData): Promise<FormState
     title,
     excerpt: str(fd, "excerpt"),
     body,
-    coverImage: str(fd, "coverImage"),
+    coverImage,
     published: fd.get("published") ? "TRUE" : "FALSE",
     showInNav: fd.get("showInNav") ? "TRUE" : "FALSE",
     order: str(fd, "order") || "0",
@@ -381,6 +402,9 @@ export async function deleteContent(id: string) {
 
 // ---------------- Settings ----------------
 
+/** Settings used as links or image addresses, with the label shown in errors. */
+const URL_SETTINGS = { heroImage: "URL gambar", facebook: "URL Facebook", instagram: "URL Instagram" } as const;
+
 export async function saveSettings(_: FormState, fd: FormData): Promise<FormState> {
   await requireEditor();
   try {
@@ -392,6 +416,11 @@ export async function saveSettings(_: FormState, fd: FormData): Promise<FormStat
       else if (fd.has(key)) value = String(fd.get(key) ?? "").trim();
       return { key, value };
     });
+    for (const { key, value } of rows) {
+      if (value && key in URL_SETTINGS && !isSafeUrl(value, { allowPath: key === "heroImage" })) {
+        return { error: `${URL_SETTINGS[key as keyof typeof URL_SETTINGS]} tidak sah. Gunakan alamat bermula dengan https://.` };
+      }
+    }
     await replaceAll("Settings", rows);
   } catch (e) {
     return { error: (e as Error).message };

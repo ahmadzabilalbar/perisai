@@ -181,6 +181,17 @@ export function formatDate(date: string) {
   return d.toLocaleDateString("ms-MY", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 }
 
+/** A web address (http/https), or for images also a path on this site ("/..."). Rejects javascript:, data: and the like. */
+export function isSafeUrl(s: string, { allowPath = false } = {}) {
+  if (allowPath && s.startsWith("/") && !s.startsWith("//")) return true;
+  try {
+    const u = new URL(s);
+    return (u.protocol === "https:" || u.protocol === "http:") && !/[\s"'<>]/.test(s);
+  } catch {
+    return false;
+  }
+}
+
 /** URL slug from a title (also used by the content form to preview the URL). */
 export function slugify(s: string) {
   return s

@@ -15,8 +15,9 @@ import {
   IconUsers,
   IconX,
 } from "@/components/Icons";
+import { ConfirmButton } from "@/components/ConfirmButton";
 import { LogoMark } from "@/components/Logo";
-import { logout } from "../actions";
+import { logout, logoutEverywhere } from "../actions";
 
 const NAV = [
   { href: "/admin", label: "Papan Pemuka", icon: IconHome },
@@ -89,6 +90,14 @@ export function AdminNav({
             <IconLogout className="size-5" />
             Log keluar
           </button>
+        </form>
+        <form action={logoutEverywhere}>
+          <ConfirmButton
+            message="Log keluar daripada semua peranti, termasuk peranti ini? Anda perlu log masuk semula di setiap peranti."
+            className="w-full rounded-xl px-3 py-1.5 text-left text-xs text-slate-500 hover:bg-white/5 hover:text-white"
+          >
+            Log keluar semua peranti
+          </ConfirmButton>
         </form>
       </div>
     </div>

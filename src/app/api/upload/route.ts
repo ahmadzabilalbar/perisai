@@ -27,6 +27,9 @@ export async function POST(req: Request) {
     return fail("Storan gambar belum disediakan (Vercel Blob). Tampal URL gambar sebagai ganti.", 503);
   }
 
+  // Refuse oversized uploads before reading the body (allowing a little for the multipart wrapping)
+  if (Number(req.headers.get("content-length")) > MAX_BYTES + 16 * 1024) return fail("Gambar terlalu besar (had 1 MB).", 413);
+
   let file: FormDataEntryValue | null;
   try {
     file = (await req.formData()).get("file");

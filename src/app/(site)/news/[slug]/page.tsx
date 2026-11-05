@@ -2,9 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Markdown } from "@/components/Markdown";
-import { formatDate, getContentBySlug } from "@/lib/data";
+import { formatDate, getContentBySlug, getPublishedPosts } from "@/lib/data";
 
 type Props = { params: Promise<{ slug: string }> };
+
+/** Builds published news ahead of time; new posts are still rendered on their first visit. */
+export async function generateStaticParams() {
+  return (await getPublishedPosts()).map((p) => ({ slug: p.slug }));
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = await getContentBySlug("post", (await params).slug);
@@ -26,7 +31,7 @@ export default async function PostPage({ params }: Props) {
       </h1>
       {post.coverImage && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={post.coverImage} alt="" className="mt-8 aspect-[16/9] w-full rounded-3xl object-cover" />
+        <img src={post.coverImage} alt="" width={1200} height={675} fetchPriority="high" className="mt-8 aspect-[16/9] w-full rounded-3xl object-cover" />
       )}
       <Markdown noImages className="prose-lg mt-10">{post.body}</Markdown>
     </article>
