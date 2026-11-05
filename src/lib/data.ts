@@ -77,6 +77,8 @@ export interface Settings {
   currency: string;
   feeNotes: string;
   bankDetails: string;
+  reminderExpired: string;
+  reminderUnpaid: string;
   contactEmail: string;
   contactPhone: string;
   address: string;
@@ -100,6 +102,11 @@ export const DEFAULT_SETTINGS: Settings = {
   currency: "RM",
   feeNotes: "Keahlian tahunan sah selama 12 bulan dari tarikh bayaran.",
   bankDetails: "",
+  // WhatsApp fee reminders; placeholders are listed in REMINDER_PLACEHOLDERS (format.ts)
+  reminderExpired:
+    "Assalamualaikum dan salam sejahtera {nama}.\n\nIni peringatan mesra daripada {pertubuhan}: keahlian tahunan anda (no. ahli {no_ahli}) telah tamat tempoh pada {tarikh_tamat}.\n\nYuran {jenis}: {yuran}.\n\nBayaran boleh dibuat ke:\n{bank}\n\nSila maklumkan kepada kami selepas bayaran dibuat. Terima kasih atas sokongan anda.",
+  reminderUnpaid:
+    "Assalamualaikum dan salam sejahtera {nama}.\n\nIni peringatan mesra daripada {pertubuhan}: yuran keahlian {jenis} anda (no. ahli {no_ahli}) masih belum dijelaskan.\n\nYuran {jenis}: {yuran}.\n\nBayaran boleh dibuat ke:\n{bank}\n\nSila maklumkan kepada kami selepas bayaran dibuat. Terima kasih atas sokongan anda.",
   contactEmail: "",
   contactPhone: "",
   address: "Universiti Utara Malaysia\n06010 UUM Sintok, Kedah",

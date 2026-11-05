@@ -185,3 +185,33 @@ export const MARKDOWN_IMAGE = /!\[[^\]]*\]\s*[([]/;
 export function whatsappShareUrl(text: string) {
   return `https://wa.me/?text=${encodeURIComponent(text)}`;
 }
+
+export const REMINDER_PLACEHOLDERS = ["nama", "no_ahli", "jenis", "yuran", "tarikh_tamat", "pertubuhan", "bank"] as const;
+
+/**
+ * Fills {placeholders} in a message template. A paragraph (lines between blank lines) that uses a placeholder
+ * with no value is left out, e.g. the bank paragraph when no bank details are set. Unknown {words} stay as typed.
+ */
+export function fillTemplate(template: string, vars: Record<string, string>) {
+  return template
+    .replace(/\r\n/g, "\n")
+    .split(/\n\s*\n/)
+    .filter((para) => ![...para.matchAll(/\{(\w+)\}/g)].some(([, k]) => k in vars && !vars[k].trim()))
+    .map((para) => para.replace(/\{(\w+)\}/g, (all, k: string) => (k in vars ? vars[k].trim() : all)).trim())
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+/** Phone number in WhatsApp's international form (Malaysian by default: 012-345 6789 → 60123456789), or "" if unusable. */
+export function whatsappNumber(phone: string) {
+  let d = phone.replace(/\D/g, "");
+  if (d.startsWith("00")) d = d.slice(2);
+  else if (d.startsWith("0")) d = "60" + d.slice(1);
+  return /^\d{10,15}$/.test(d) ? d : "";
+}
+
+/** Opens a chat with `phone` with `text` filled in; "" if the number is unusable. */
+export function whatsappChatUrl(phone: string, text: string) {
+  const n = whatsappNumber(phone);
+  return n ? `https://wa.me/${n}?text=${encodeURIComponent(text)}` : "";
+}

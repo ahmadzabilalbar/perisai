@@ -7,6 +7,7 @@ import { EditOnly } from "@/components/EditOnly";
 import { IconChat } from "@/components/Icons";
 import {
   daysUntil,
+  fillTemplate,
   formatDate,
   getMember,
   getMemberChildren,
@@ -15,6 +16,7 @@ import {
   MEMBERSHIP_LABEL,
   memberState,
   type MembershipType,
+  whatsappChatUrl,
   whatsappShareUrl,
   withoutToken,
 } from "@/lib/data";
@@ -50,20 +52,20 @@ export default async function MemberPage({ params }: Props) {
   const needsReminder = state === "Expired" || state === "Unpaid";
   const fee = m.membershipType === "Lifetime" ? s.lifetimeFee : s.annualFee;
   const typeLabel = MEMBERSHIP_LABEL[m.membershipType].toLowerCase();
+  // Message templates are edited in Tetapan → Peringatan yuran
   const reminder = needsReminder
-    ? [
-        `Assalamualaikum dan salam sejahtera ${m.name}.`,
-        "",
-        state === "Expired"
-          ? `Ini peringatan mesra daripada ${s.siteName}: keahlian tahunan anda (no. ahli ${m.memberNo}) telah tamat tempoh pada ${formatDate(m.paidUntil)}.`
-          : `Ini peringatan mesra daripada ${s.siteName}: yuran keahlian ${typeLabel} anda (no. ahli ${m.memberNo}) masih belum dijelaskan.`,
-        ...(fee ? [`Yuran ${typeLabel}: ${s.currency} ${fee}.`] : []),
-        ...(s.bankDetails ? ["", "Bayaran boleh dibuat ke:", s.bankDetails.trim()] : []),
-        "",
-        "Sila maklumkan kepada kami selepas bayaran dibuat. Terima kasih atas sokongan anda.",
-      ].join("\n")
+    ? fillTemplate(state === "Expired" ? s.reminderExpired : s.reminderUnpaid, {
+        nama: m.name,
+        no_ahli: m.memberNo,
+        jenis: typeLabel,
+        yuran: fee ? `${s.currency} ${fee}` : "",
+        tarikh_tamat: m.paidUntil ? formatDate(m.paidUntil) : "",
+        pertubuhan: s.siteName,
+        bank: s.bankDetails,
+      })
     : "";
   const reminderUrl = whatsappShareUrl(reminder);
+  const reminderChatUrl = whatsappChatUrl(m.phone, reminder); // "" when there's no usable phone number
 
   return (
     <div className="space-y-6">
@@ -109,17 +111,47 @@ export default async function MemberPage({ params }: Props) {
             <EditOnly>
               {needsReminder && (
                 <div className="mt-4 border-t border-slate-100 pt-4">
-                  <a
-                    href={reminderUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn w-full bg-emerald-600 text-white hover:bg-emerald-700"
-                  >
-                    <IconChat className="size-4" /> Hantar peringatan WhatsApp
-                  </a>
+                  <p className="mb-2 flex items-center gap-1.5 text-sm font-medium text-slate-900">
+                    <IconChat className="size-4 text-emerald-600" /> Peringatan WhatsApp
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {reminderChatUrl ? (
+                      <a
+                        href={reminderChatUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn !px-3 bg-emerald-600 text-sm text-white hover:bg-emerald-700"
+                      >
+                        Hantar ke ahli
+                      </a>
+                    ) : (
+                      <span
+                        aria-disabled="true"
+                        title="Tiada no. telefon yang sah"
+                        className="btn !px-3 cursor-not-allowed bg-slate-100 text-sm text-slate-400"
+                      >
+                        Hantar ke ahli
+                      </span>
+                    )}
+                    <a
+                      href={reminderUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn !px-3 text-sm text-emerald-700 ring-1 ring-emerald-600 hover:bg-emerald-50"
+                    >
+                      Pilih penerima
+                    </a>
+                  </div>
                   <p className="mt-2 text-xs text-slate-500">
-                    Membuka WhatsApp dengan mesej peringatan yuran yang telah diisi. Pilih penerima, dan sunting
-                    mesej jika perlu sebelum menghantar.
+                    {reminderChatUrl ? (
+                      <>
+                        <strong>Hantar ke ahli</strong> membuka chat dengan {m.phone}.{" "}
+                      </>
+                    ) : (
+                      <>Tiada no. telefon yang sah untuk ahli ini. </>
+                    )}
+                    <strong>Pilih penerima</strong> membolehkan anda memilih sendiri penerimanya. Mesej telah diisi;
+                    sunting jika perlu sebelum menghantar.
                   </p>
                 </div>
               )}

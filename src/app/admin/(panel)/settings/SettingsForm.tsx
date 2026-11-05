@@ -5,11 +5,19 @@ import { useCanEdit } from "@/components/AdminRole";
 import { FormMessage } from "@/components/FormMessage";
 import { SubmitButton } from "@/components/SubmitButton";
 import type { Settings } from "@/lib/data";
+import { REMINDER_PLACEHOLDERS } from "@/lib/format";
 import { saveSettings } from "../../actions";
 
-type FieldDef = { key: keyof Settings; label: string; type?: "textarea" | "url" | "email"; hint?: string; wide?: boolean };
+type FieldDef = {
+  key: keyof Settings;
+  label: string;
+  type?: "textarea" | "url" | "email";
+  rows?: number;
+  hint?: string;
+  wide?: boolean;
+};
 
-const GROUPS: { title: string; fields: FieldDef[] }[] = [
+const GROUPS: { title: string; fields: FieldDef[]; hint?: React.ReactNode }[] = [
   {
     title: "Umum",
     fields: [
@@ -44,6 +52,25 @@ const GROUPS: { title: string; fields: FieldDef[] }[] = [
     ],
   },
   {
+    title: "Peringatan yuran (WhatsApp)",
+    fields: [
+      { key: "reminderExpired", label: "Mesej: keahlian tamat tempoh", type: "textarea", rows: 9, wide: true },
+      { key: "reminderUnpaid", label: "Mesej: yuran belum dibayar", type: "textarea", rows: 9, wide: true },
+    ],
+    hint: (
+      <>
+        Boleh guna: {REMINDER_PLACEHOLDERS.map((p, i) => (
+          <span key={p}>
+            {i > 0 && ", "}
+            <code className="rounded bg-slate-100 px-1">{`{${p}}`}</code>
+          </span>
+        ))}
+        . Perenggan yang menggunakan nilai kosong (contohnya <code className="rounded bg-slate-100 px-1">{"{bank}"}</code>{" "}
+        jika tiada maklumat bank) akan digugurkan. Biarkan kosong untuk mesej asal.
+      </>
+    ),
+  },
+  {
     title: "Hubungan & media sosial",
     fields: [
       { key: "contactEmail", label: "E-mel", type: "email" },
@@ -66,6 +93,7 @@ export function SettingsForm({ settings }: { settings: Settings }) {
         <fieldset key={g.title} className="card p-5 sm:p-6">
           <legend className="sr-only">{g.title}</legend>
           <h2 className="mb-4 font-semibold text-slate-900">{g.title}</h2>
+          {g.hint && <p className="-mt-2 mb-4 text-xs leading-relaxed text-slate-500">{g.hint}</p>}
           <div className="grid gap-4 sm:grid-cols-2">
             {g.fields.map((f) => (
               <div key={f.key} className={f.wide ? "sm:col-span-2" : ""}>
@@ -73,7 +101,7 @@ export function SettingsForm({ settings }: { settings: Settings }) {
                   {f.label}
                 </label>
                 {f.type === "textarea" ? (
-                  <textarea id={f.key} name={f.key} rows={3} defaultValue={settings[f.key]} className="input" />
+                  <textarea id={f.key} name={f.key} rows={f.rows ?? 3}defaultValue={settings[f.key]} className="input" />
                 ) : (
                   <input id={f.key} name={f.key} type={f.type ?? "text"} defaultValue={settings[f.key]} className="input" />
                 )}
