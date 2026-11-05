@@ -178,7 +178,6 @@ export function formatDate(date: string) {
   return d.toLocaleDateString("ms-MY", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 }
 
-/** Markdown image syntax: ![alt](url) or reference-style ![alt][ref]. News bodies may not contain images. */
 /** URL slug from a title (also used by the content form to preview the URL). */
 export function slugify(s: string) {
   return s
@@ -190,7 +189,8 @@ export function slugify(s: string) {
     .replace(/^-+|-+$/g, "");
 }
 
-export const MARKDOWN_IMAGE = /!\[[^\]]*\]\s*[([]/;
+/** Markdown image syntax: ![alt](url) or reference-style ![alt][ref]. News bodies may not contain images. */
+export const MARKDOWN_IMAGE =/!\[[^\]]*\]\s*[([]/;
 
 /** WhatsApp link with a pre-filled message and no recipient: the sender picks the chat. */
 export function whatsappShareUrl(text: string) {

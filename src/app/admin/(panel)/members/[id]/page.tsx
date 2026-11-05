@@ -51,8 +51,9 @@ export default async function MemberPage({ params }: Props) {
   const history = [...own].sort((a, b) => b.date.localeCompare(a.date));
   const days = daysUntil(m.paidUntil);
 
-  // WhatsApp reminder for members whose membership has lapsed or is unpaid
-  const needsReminder = state === "Expired" || state === "Unpaid";
+  // WhatsApp reminder for members whose membership has lapsed or who still owe the fee
+  // (Pending = waiting for payment, e.g. a new application: same message as unpaid)
+  const needsReminder = state === "Expired" || state === "Unpaid" || state === "Pending";
   const fee = m.membershipType === "Lifetime" ? s.lifetimeFee : s.annualFee;
   const typeLabel = MEMBERSHIP_LABEL[m.membershipType].toLowerCase();
   // Message templates are edited in Tetapan → Templat mesej
