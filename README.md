@@ -90,7 +90,7 @@ Copy `.env.example` to `.env.local` and fill in:
 | `GOOGLE_PRIVATE_KEY` | `private_key` from the JSON key (including the `-----BEGIN…` / `END…` lines) |
 | `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET` | OAuth web client for "Sign in with Google" (see below) |
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | Email sending for sign-in codes. For Gmail: `smtp.gmail.com`, `465`, your Gmail address, and an [App Password](https://myaccount.google.com/apppasswords) |
-| `SUPERADMIN_EMAILS` | Optional; comma-separated super admin Gmail addresses (default `ahmadzabilalbar@gmail.com`) |
+| `SUPERADMIN_EMAILS` | Required; comma-separated super admin addresses. Without it nobody has super admin access |
 
 #### Sign in with Google (OAuth client)
 

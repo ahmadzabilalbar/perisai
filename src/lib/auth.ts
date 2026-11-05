@@ -32,9 +32,12 @@ export const canEditContent = (role: Role) => canEdit(role) || role === "editor"
 /** May open admin pages other than Halaman & Berita. Editors are kept away from member data. */
 export const canViewAll = (role: Role) => role !== "editor";
 
-/** Gmail accounts allowed to sign in with Google as super admin (comma-separated env overrides the default). */
+/**
+ * Accounts that are super admin (comma-separated SUPERADMIN_EMAILS). No built-in default: a missing setting
+ * means no super admins, never a hidden one.
+ */
 export function superAdminEmails() {
-  return (process.env.SUPERADMIN_EMAILS || "ahmadzabilalbar@gmail.com")
+  return (process.env.SUPERADMIN_EMAILS ?? "")
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
