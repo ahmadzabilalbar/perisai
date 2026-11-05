@@ -1,9 +1,9 @@
 "use server";
 
 import { updateTag } from "next/cache";
-import { headers } from "next/headers";
 import { newId, nowIso } from "@/lib/sheets";
 import { parseChildren, saveChildren } from "@/lib/children";
+import { clientIp } from "@/lib/client-ip";
 import { checkFormToken } from "@/lib/form-token";
 import { insertMember } from "@/lib/members";
 import { rateLimit } from "@/lib/throttle";
@@ -20,11 +20,6 @@ const ALL_PER_HOUR = 60;
 const HOUR = 60 * 60 * 1000;
 
 const BUSY = "Terlalu banyak permohonan diterima buat masa ini. Sila cuba lagi dalam masa sejam.";
-
-async function clientIp() {
-  const h = await headers();
-  return h.get("x-forwarded-for")?.split(",")[0].trim() || h.get("x-real-ip") || "unknown";
-}
 
 export async function submitJoin(_: JoinState, fd: FormData): Promise<JoinState> {
   // Honeypot (bots fill every field) and signed load-time stamp: pretend success so bots don't adapt

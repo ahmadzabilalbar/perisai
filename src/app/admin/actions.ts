@@ -3,6 +3,7 @@
 import { randomBytes } from "node:crypto";
 import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import {
   checkUserPassword,
   createSession,
@@ -15,6 +16,8 @@ import {
 } from "@/lib/auth";
 import { isEmailLoginEnabled, sendLoginCode, verifyLoginCode } from "@/lib/login-codes";
 import { parseChildren, saveChildren } from "@/lib/children";
+import { clientIp } from "@/lib/client-ip";
+import { rateLimit } from "@/lib/throttle";
 import { MARKDOWN_IMAGE, slugify, USER_ROLES, type UserRole } from "@/lib/format";
 import { LOCK_MINUTES } from "@/lib/login-guard";
 import { insertMember } from "@/lib/members";
@@ -43,8 +46,26 @@ const str = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
 // ---------------- Auth ----------------
 
+/** Sign-in attempts (password, code requests and code guesses together) per IP per 15 minutes, on this server instance. */
+const SIGNIN_PER_IP = 30;
+const SIGNIN_WINDOW_MS = 15 * 60 * 1000;
+const TOO_MANY = "Terlalu banyak cubaan log masuk dari rangkaian ini. Sila cuba lagi dalam masa 15 minit.";
+
+async function signinAllowed() {
+  return rateLimit(`signin:${await clientIp()}`, SIGNIN_PER_IP, SIGNIN_WINDOW_MS);
+}
+
+/**
+ * Waits until `ms` have passed since `start`. Failed sign-ins all answer after the same time, so the response
+ * time doesn't show whether an account exists (a real account means extra Sheets reads and a password check).
+ */
+const settle = (start: number, ms: number) =>
+  new Promise((r) => setTimeout(r, Math.max(0, ms - (Date.now() - start))));
+
 /** Email + password sign-in (passwords are set per user in Users & access). */
 export async function login(_: FormState, fd: FormData): Promise<FormState> {
+  const start = Date.now();
+  if (!(await signinAllowed())) return { error: TOO_MANY };
   let result: Awaited<ReturnType<typeof checkUserPassword>>;
   try {
     result = await checkUserPassword(str(fd, "login"), String(fd.get("password") ?? ""));
@@ -54,7 +75,7 @@ export async function login(_: FormState, fd: FormData): Promise<FormState> {
   }
   const { session, locked } = result;
   if (!session) {
-    await new Promise((r) => setTimeout(r, 800)); // slow down guessing
+    await settle(start, 1500); // same answer time for unknown and real accounts; also slows guessing
     if (locked) {
       return {
         error: `Terlalu banyak cubaan yang gagal. Akaun ini dikunci selama ${LOCK_MINUTES} minit. Anda masih boleh log masuk dengan Google atau kod e-mel.`,
@@ -73,16 +94,22 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 /** Step 1 of email sign-in: send a code if the address has access (same reply either way). */
 export async function requestLoginCode(_: CodeState, fd: FormData): Promise<CodeState> {
   if (!isEmailLoginEnabled()) return { step: "email", error: "Log masuk melalui e-mel belum dikonfigurasi." };
+  const start = Date.now();
   const email = str(fd, "email").toLowerCase();
   if (!EMAIL_RE.test(email)) return { step: "email", error: "Sila masukkan alamat e-mel yang sah." };
+  if (!(await signinAllowed())) return { step: "email", email, error: TOO_MANY };
 
   try {
-    if (await roleForEmail(email)) await sendLoginCode(email, (await getSettings()).siteName);
-    else await new Promise((r) => setTimeout(r, 800)); // don't reveal which emails have access
+    if (await roleForEmail(email)) {
+      const { siteName } = await getSettings();
+      // Sent after the response, so the reply takes the same time whether or not the email has access
+      after(() => sendLoginCode(email, siteName).catch((e) => console.error("Failed to send sign-in code", e)));
+    }
   } catch (e) {
-    console.error("Failed to send sign-in code", e);
+    console.error("Sign-in code request failed", e);
     return { step: "email", email, error: "Kod tidak dapat dihantar. Sila cuba lagi kemudian." };
   }
+  await settle(start, 800);
   return {
     step: "code",
     email,
@@ -92,8 +119,10 @@ export async function requestLoginCode(_: CodeState, fd: FormData): Promise<Code
 
 /** Step 2 of email sign-in: check the code and start a session. */
 export async function verifyLoginCodeAction(_: CodeState, fd: FormData): Promise<CodeState> {
+  const start = Date.now();
   const email = str(fd, "email").toLowerCase();
   const code = str(fd, "code").replace(/\s+/g, "");
+  if (!(await signinAllowed())) return { step: "code", email, error: TOO_MANY };
   const role = EMAIL_RE.test(email) ? await roleForEmail(email) : null;
   let result: Awaited<ReturnType<typeof verifyLoginCode>> = "failed";
   if (role) {
@@ -105,7 +134,7 @@ export async function verifyLoginCodeAction(_: CodeState, fd: FormData): Promise
     }
   }
   if (!role || result !== "ok") {
-    await new Promise((r) => setTimeout(r, 600));
+    await settle(start, 1500);
     if (result === "locked") {
       return {
         step: "code",
