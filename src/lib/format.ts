@@ -178,6 +178,9 @@ export function formatDate(date: string) {
   return d.toLocaleDateString("ms-MY", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 }
 
+/** Markdown image syntax: ![alt](url) or reference-style ![alt][ref]. News bodies may not contain images. */
+export const MARKDOWN_IMAGE = /!\[[^\]]*\]\s*[([]/;
+
 /** WhatsApp link with a pre-filled message and no recipient: the sender picks the chat. */
 export function whatsappShareUrl(text: string) {
   return `https://wa.me/?text=${encodeURIComponent(text)}`;

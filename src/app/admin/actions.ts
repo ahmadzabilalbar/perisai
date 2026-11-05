@@ -14,6 +14,7 @@ import {
 } from "@/lib/auth";
 import { isEmailLoginEnabled, sendLoginCode, verifyLoginCode } from "@/lib/login-codes";
 import { parseChildren, saveChildren } from "@/lib/children";
+import { MARKDOWN_IMAGE } from "@/lib/format";
 import { LOCK_MINUTES } from "@/lib/login-guard";
 import { insertMember } from "@/lib/members";
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH, hashPassword } from "@/lib/passwords";
@@ -270,6 +271,12 @@ export async function saveContent(_: FormState, fd: FormData): Promise<FormState
     return { error: `"${slug}" ialah URL yang dikhaskan. Sila pilih slug lain.` };
   }
 
+  const body = String(fd.get("body") ?? "");
+  // News: the cover image is the only picture (pages may still embed images)
+  if (type === "post" && MARKDOWN_IMAGE.test(body)) {
+    return { error: "Berita tidak boleh mengandungi gambar dalam kandungan. Gunakan gambar muka depan sahaja." };
+  }
+
   const all = await getAllContent();
   if (all.some((c) => c.type === type && c.slug === slug && c.id !== id)) {
     return { error: `${type === "post" ? "Berita" : "Halaman"} lain telah menggunakan URL "${slug}".` };
@@ -280,7 +287,7 @@ export async function saveContent(_: FormState, fd: FormData): Promise<FormState
     slug,
     title,
     excerpt: str(fd, "excerpt"),
-    body: String(fd.get("body") ?? ""),
+    body,
     coverImage: str(fd, "coverImage"),
     published: fd.get("published") ? "TRUE" : "FALSE",
     showInNav: fd.get("showInNav") ? "TRUE" : "FALSE",

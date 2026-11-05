@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { useCanEdit } from "@/components/AdminRole";
 import { FormMessage } from "@/components/FormMessage";
 import { Markdown } from "@/components/Markdown";
+import { MARKDOWN_IMAGE } from "@/lib/format";
 import { SubmitButton } from "@/components/SubmitButton";
 import type { Content } from "@/lib/data";
 import { saveContent } from "../../actions";
@@ -14,6 +15,7 @@ export function ContentForm({ content, type }: { content?: Content; type: "page"
   const canEdit = useCanEdit();
   const [body, setBody] = useState(content?.body ?? "");
   const [tab, setTab] = useState<"write" | "preview">("write");
+  const isPost = type === "post";
 
   return (
     <form action={action} className="grid gap-6 lg:grid-cols-[1fr_18rem]">
@@ -58,16 +60,35 @@ export function ContentForm({ content, type }: { content?: Content; type: "page"
             onChange={(e) => setBody(e.target.value)}
             rows={18}
             className={`input font-mono !text-[13px] leading-relaxed ${tab === "preview" ? "hidden" : ""}`}
-            placeholder={"## Tajuk\n\nTulis menggunakan **Markdown**. Tambah gambar dengan ![alt](https://…)"}
+            placeholder={
+              isPost
+                ? "## Tajuk\n\nTulis menggunakan **Markdown**."
+                : "## Tajuk\n\nTulis menggunakan **Markdown**. Tambah gambar dengan ![alt](https://…)"
+            }
           />
           {tab === "preview" && (
             <div className="min-h-[24rem] rounded-xl p-4 ring-1 ring-slate-200">
-              {body ? <Markdown>{body}</Markdown> : <p className="text-sm text-slate-400">Tiada apa-apa untuk dipratonton.</p>}
+              {body ? (
+                <Markdown noImages={isPost}>{body}</Markdown>
+              ) : (
+                <p className="text-sm text-slate-400">Tiada apa-apa untuk dipratonton.</p>
+              )}
             </div>
+          )}
+          {isPost && MARKDOWN_IMAGE.test(body) && (
+            <p className="mt-1.5 text-xs font-medium text-red-600">
+              Berita tidak boleh mengandungi gambar dalam kandungan. Buang <code>![…](…)</code> dan gunakan gambar muka depan.
+            </p>
           )}
           <p className="mt-1.5 text-xs text-slate-500">
             Menyokong Markdown: <code>## Tajuk</code>, <code>**tebal**</code>, <code>[pautan](url)</code>,{" "}
-            <code>![gambar](url)</code>, senarai dan jadual.
+            {isPost ? (
+              <>senarai dan jadual. Gambar hanya melalui gambar muka depan.</>
+            ) : (
+              <>
+                <code>![gambar](url)</code>, senarai dan jadual.
+              </>
+            )}
           </p>
         </div>
       </div>

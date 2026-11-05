@@ -28,7 +28,7 @@ export default async function PostPage({ params }: Props) {
         // eslint-disable-next-line @next/next/no-img-element
         <img src={post.coverImage} alt="" className="mt-8 aspect-[16/9] w-full rounded-3xl object-cover" />
       )}
-      <Markdown className="prose-lg mt-10">{post.body}</Markdown>
+      <Markdown noImages className="prose-lg mt-10">{post.body}</Markdown>
     </article>
   );
 }
