@@ -139,6 +139,78 @@ Minum petang disediakan.`,
 
 Terima kasih kepada semua ahli dan penaja atas sokongan anda.`,
   },
+
+  // Last year's news: fixed dates (not daysAgo) so they always fall in 2025, for the year grouping on /news
+  {
+    slug: "agm-2025",
+    title: "Mesyuarat Agung Tahunan 2025",
+    excerpt: "Ringkasan keputusan Mesyuarat Agung Tahunan 2025 dan barisan AJK baharu.",
+    date: "2025-11-22",
+    body: `Mesyuarat Agung Tahunan 2025 telah berlangsung dengan jayanya di Dewan Seminar, UUM.
+
+## Keputusan utama
+
+- Laporan tahunan dan penyata kewangan diluluskan
+- Barisan AJK sesi 2025/2026 dipilih
+- Yuran tahunan kekal tidak berubah
+
+Terima kasih kepada semua ahli yang hadir.`,
+  },
+  {
+    slug: "sambutan-hari-oku-2025",
+    title: "Sambutan Hari OKU 2025",
+    excerpt: "Lebih 200 pengunjung memeriahkan sambutan Hari OKU peringkat UUM.",
+    date: "2025-12-06",
+    body: `Sambutan Hari OKU 2025 menghimpunkan ahli, anak-anak istimewa dan warga kampus.
+
+Antara acara:
+
+1. Pameran hasil seni anak-anak
+2. Persembahan nasyid dan pantomim
+3. Cabutan bertuah
+
+> Terima kasih kepada semua sukarelawan yang membantu.`,
+  },
+  {
+    slug: "program-ramadan-2025",
+    title: "Program Iftar Bersama Anak Istimewa",
+    excerpt: "Majlis berbuka puasa bersama keluarga ahli sempena Ramadan 1446H.",
+    date: "2025-03-15",
+    body: `Persatuan telah menganjurkan majlis **iftar** bersama keluarga ahli.
+
+Sumbangan *duit raya* turut diagihkan kepada anak-anak istimewa ahli.`,
+  },
+  {
+    slug: "bengkel-pengurusan-emosi-2025",
+    title: "Bengkel Pengurusan Emosi untuk Ibu Bapa",
+    excerpt: "Teknik mengurus tekanan dan emosi ketika menjaga anak berkeperluan khas.",
+    date: "2025-05-10",
+    body: `Bengkel ini dikendalikan oleh kaunselor berdaftar dari Pusat Kaunseling UUM.
+
+## Topik
+
+- Mengenal tanda-tanda keletihan penjaga
+- Teknik pernafasan dan relaksasi
+- Membina rangkaian sokongan`,
+  },
+  {
+    slug: "sukaneka-mesra-oku-2025",
+    title: "Sukaneka Mesra OKU 2025",
+    excerpt: "Hari sukan santai untuk anak-anak istimewa dan adik-beradik mereka.",
+    date: "2025-08-23",
+    body: `Sukaneka diadakan di Padang Varsiti dengan acara yang disesuaikan untuk semua kebolehan.
+
+Setiap peserta menerima **pingat penyertaan**.`,
+  },
+  {
+    slug: "pendaftaran-ahli-2025",
+    title: "Pendaftaran Ahli Baharu Kini Dibuka",
+    excerpt: "Staf UUM yang mempunyai anak istimewa dijemput menyertai persatuan.",
+    date: "2025-01-20",
+    body: `Pendaftaran keahlian bagi tahun 2025 kini dibuka.
+
+Isi borang di halaman *Sertai* dan buat bayaran yuran untuk mengesahkan keahlian.`,
+  },
 ];
 
 // Dummy pages (shown in the site menu, ordered by `order`)
@@ -249,7 +321,8 @@ async function add() {
   const rows = [...POSTS, ...PAGES]
     .filter((p) => !existing.has(p.slug))
     .map((p) => {
-      const at = new Date(now - p.daysAgo * 86_400_000).toISOString();
+      // A fixed `date` (9 a.m. Malaysia time) wins over `daysAgo`
+      const at = p.date ? new Date(`${p.date}T01:00:00Z`).toISOString() : new Date(now - p.daysAgo * 86_400_000).toISOString();
       const page = p.type === "page";
       // Pages are added live and in the site menu; posts are added as drafts
       return {
