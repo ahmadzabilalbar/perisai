@@ -7,6 +7,7 @@ import { Markdown } from "@/components/Markdown";
 import { SubmitButton } from "@/components/SubmitButton";
 import type { Content } from "@/lib/data";
 import { saveContent } from "../../actions";
+import { CoverImageInput } from "./CoverImageInput";
 
 export function ContentForm({ content, type }: { content?: Content; type: "page" | "post" }) {
   const [state, action] = useActionState(saveContent, undefined);
@@ -111,10 +112,7 @@ export function ContentForm({ content, type }: { content?: Content; type: "page"
               <input name="order" type="number" defaultValue={content?.order ?? 0} className="input" />
             </div>
           )}
-          <div>
-            <label className="label">URL gambar muka depan</label>
-            <input name="coverImage" type="url" defaultValue={content?.coverImage} placeholder="https://…" className="input" />
-          </div>
+          <CoverImageInput defaultValue={content?.coverImage} />
         </div>
         <FormMessage state={state} />
         {canEdit && <SubmitButton className="btn-primary w-full">{content ? "Simpan perubahan" : "Cipta"}</SubmitButton>}

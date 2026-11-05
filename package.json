@@ -9,6 +9,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@vercel/blob": "^2.8.2",
     "google-auth-library": "^11.3.2",
     "jose": "^6.2.15",
     "next": "^16.4.4",
