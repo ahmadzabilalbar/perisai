@@ -35,7 +35,7 @@ async function add(password) {
     {
       email: EMAIL,
       role: "editor",
-      name: "Penyunting (ujian)",
+      name: "Penyunting",
       addedBy: "scripts/dummy-editor.mjs",
       createdAt: now,
       passwordHash: await hashPassword(pw),
