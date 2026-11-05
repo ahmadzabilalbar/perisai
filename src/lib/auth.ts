@@ -36,12 +36,14 @@ export function superAdminEmails() {
  * Email + password sign-in. Returns the session to create, or null.
  * Passwords are set per user by the super admin in Users & access.
  */
-export async function checkUserPassword(email: string, password: string): Promise<Session | null> {
-  const e = email.trim().toLowerCase();
-  const user = (await getUsers()).find((u) => u.email === e);
+/** `login` is an email address or a username (anything without "@"). */
+export async function checkUserPassword(login: string, password: string): Promise<Session | null> {
+  const l = login.trim().toLowerCase();
+  if (!l) return null;
+  const user = (await getUsers()).find((u) => (l.includes("@") ? u.email === l : u.username === l));
   if (!user?.passwordHash || !(await verifyPassword(password, user.passwordHash))) return null;
-  const role = await roleForEmail(e);
-  return role ? { role, email: e } : null;
+  const role = await roleForEmail(user.email);
+  return role ? { role, email: user.email } : null;
 }
 
 /** Signed session cookie (name, value, options), usable with cookies() or a NextResponse. */

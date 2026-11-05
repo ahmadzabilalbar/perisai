@@ -45,8 +45,8 @@ export function SiteHeader({
             <Link
               key={l.href}
               href={l.href}
-              className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
-                isActive(l.href) ? "text-brand-700" : "text-slate-600 hover:text-slate-900"
+              className={`rounded-lg px-3 py-2 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-brand-200 ${
+                isActive(l.href) ? "bg-brand-50 text-brand-700" : "text-slate-600 hover:bg-slate-100/70 hover:text-slate-900"
               }`}
             >
               {l.label}

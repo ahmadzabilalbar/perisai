@@ -11,16 +11,18 @@ export function LoginForm() {
   return (
     <form action={action} className="space-y-3">
       <div>
-        <label htmlFor="email" className="label">
-          E-mel
+        <label htmlFor="login" className="label">
+          E-mel atau nama pengguna
         </label>
         <input
-          id="email"
-          name="email"
-          type="email"
+          id="login"
+          name="login"
+          type="text"
           required
           autoComplete="username"
-          placeholder="nama@uum.edu.my"
+          autoCapitalize="none"
+          spellCheck={false}
+          placeholder="nama@uum.edu.my atau nama pengguna"
           className="input"
         />
       </div>

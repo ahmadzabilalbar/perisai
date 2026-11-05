@@ -30,8 +30,8 @@ for (const tab of TABS) {
   const rows = await readRows(tab); // also refuses to run if the columns don't match the app
   let detail = "";
   if (tab === "Members") {
-    const dummy = rows.filter((r) => r.row.name.startsWith("[UJIAN]")).length;
-    detail = ` (${dummy} [UJIAN], ${rows.length - dummy} other)`;
+    const dummy = rows.filter((r) => r.row.email.endsWith("@example.com")).length;
+    detail = ` (${dummy} test @example.com, ${rows.length - dummy} other)`;
   }
   if (tab === "Content" && rows.length) {
     detail = "\n" + rows.map((r) => `      - ${r.row.type}: ${r.row.title}`).join("\n");

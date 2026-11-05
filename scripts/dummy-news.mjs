@@ -1,19 +1,19 @@
 // Adds or removes dummy news posts and pages for testing.
 //
-//   node --env-file=.env.local scripts/dummy-news.mjs add      # adds unpublished "[UJIAN]" posts
-//   node --env-file=.env.local scripts/dummy-news.mjs covers   # adds placeholder cover images to them
+//   node --env-file=.env.local scripts/dummy-news.mjs add      # adds unpublished test posts
+//   node --env-file=.env.local scripts/dummy-news.mjs covers   # adds placeholder cover images to the posts (pages have none)
 //   node --env-file=.env.local scripts/dummy-news.mjs publish  # makes them live ("unpublish" = back to drafts)
 //   node --env-file=.env.local scripts/dummy-news.mjs remove   # deletes them again
 //
 // Posts are drafts (published = FALSE) so they never show on the public site until you
-// publish one in /admin/content. Only rows whose slug starts with "ujian-" AND whose title
-// starts with "[UJIAN]" are ever removed.
+// publish one in /admin/content. Only rows whose slug is one of the POSTS/PAGES slugs below are ever
+// touched, so don't reuse those slugs for real content before running "remove".
 import { appendRows, deleteRows, readRows, setColumn } from "./sheet-lib.mjs";
 
 const POSTS = [
   {
-    slug: "ujian-mesyuarat-agung-tahunan",
-    title: "[UJIAN] Mesyuarat Agung Tahunan 2026",
+    slug: "mesyuarat-agung-tahunan",
+    title: "Mesyuarat Agung Tahunan 2026",
     excerpt: "Semua ahli dijemput hadir ke Mesyuarat Agung Tahunan persatuan.",
     daysAgo: 2,
     body: `Mesyuarat Agung Tahunan persatuan akan diadakan seperti berikut:
@@ -32,8 +32,8 @@ const POSTS = [
 Sila sahkan kehadiran sebelum 14 November 2026.`,
   },
   {
-    slug: "ujian-hari-keluarga",
-    title: "[UJIAN] Hari Keluarga Bersama Anak Istimewa",
+    slug: "hari-keluarga",
+    title: "Hari Keluarga Bersama Anak Istimewa",
     excerpt: "Aktiviti santai untuk ibu bapa dan anak-anak istimewa di Taman Rekreasi UUM.",
     daysAgo: 9,
     body: `Persatuan menganjurkan **Hari Keluarga** untuk mengeratkan hubungan sesama ahli.
@@ -47,8 +47,8 @@ Antara aktiviti:
 Penyertaan adalah **percuma** untuk ahli dan keluarga.`,
   },
   {
-    slug: "ujian-bengkel-terapi-pertuturan",
-    title: "[UJIAN] Bengkel Terapi Pertuturan untuk Ibu Bapa",
+    slug: "bengkel-terapi-pertuturan",
+    title: "Bengkel Terapi Pertuturan untuk Ibu Bapa",
     excerpt: "Pelajari teknik asas terapi pertuturan yang boleh dilakukan di rumah.",
     daysAgo: 18,
     body: `Bengkel ini dikendalikan oleh ahli terapi pertuturan bertauliah.
@@ -58,8 +58,8 @@ Penyertaan adalah **percuma** untuk ahli dan keluarga.`,
 Bawa bersama buku nota dan alat tulis.`,
   },
   {
-    slug: "ujian-sumbangan-persekolahan",
-    title: "[UJIAN] Sumbangan Persekolahan 2027 Kini Dibuka",
+    slug: "sumbangan-persekolahan",
+    title: "Sumbangan Persekolahan 2027 Kini Dibuka",
     excerpt: "Permohonan sumbangan persekolahan untuk anak OKU ahli kini dibuka.",
     daysAgo: 30,
     body: `Ahli yang mempunyai anak OKU bersekolah boleh memohon **sumbangan persekolahan**.
@@ -72,8 +72,8 @@ Bawa bersama buku nota dan alat tulis.`,
 Tarikh tutup permohonan: 31 Disember 2026.`,
   },
   {
-    slug: "ujian-kemas-kini-maklumat-anak",
-    title: "[UJIAN] Peringatan: Kemas Kini Maklumat Anak",
+    slug: "kemas-kini-maklumat-anak",
+    title: "Peringatan: Kemas Kini Maklumat Anak",
     excerpt: "Sila semak dan kemas kini maklumat anak OKU anda melalui pautan peribadi.",
     daysAgo: 45,
     body: `Untuk memudahkan perancangan program, ahli diminta menyemak maklumat anak masing-masing.
@@ -81,8 +81,8 @@ Tarikh tutup permohonan: 31 Disember 2026.`,
 Pautan kemas kini peribadi akan dihantar melalui e-mel. Jika anda tidak menerimanya, sila hubungi setiausaha.`,
   },
   {
-    slug: "ujian-ceramah-hak-oku",
-    title: "[UJIAN] Ceramah: Hak dan Kemudahan untuk OKU",
+    slug: "ceramah-hak-oku",
+    title: "Ceramah: Hak dan Kemudahan untuk OKU",
     excerpt: "Ketahui hak, bantuan dan kemudahan yang disediakan untuk anak OKU dan keluarga.",
     daysAgo: 55,
     body: `Ceramah ini akan menerangkan:
@@ -94,8 +94,8 @@ Pautan kemas kini peribadi akan dihantar melalui e-mel. Jika anda tidak menerima
 Penceramah jemputan daripada Jabatan Kebajikan Masyarakat.`,
   },
   {
-    slug: "ujian-lawatan-pusat-pemulihan",
-    title: "[UJIAN] Lawatan ke Pusat Pemulihan Dalam Komuniti",
+    slug: "lawatan-pusat-pemulihan",
+    title: "Lawatan ke Pusat Pemulihan Dalam Komuniti",
     excerpt: "Lawatan sambil belajar ke PDK berhampiran bersama ahli dan anak-anak.",
     daysAgo: 70,
     body: `Lawatan ini memberi peluang kepada ahli mengenali program di **Pusat Pemulihan Dalam Komuniti (PDK)**.
@@ -103,8 +103,8 @@ Penceramah jemputan daripada Jabatan Kebajikan Masyarakat.`,
 Pengangkutan disediakan. Tempat terhad kepada 40 orang.`,
   },
   {
-    slug: "ujian-sambutan-hari-oku",
-    title: "[UJIAN] Sambutan Hari OKU Peringkat UUM",
+    slug: "sambutan-hari-oku",
+    title: "Sambutan Hari OKU Peringkat UUM",
     excerpt: "Sertai sambutan Hari OKU dengan pameran, persembahan dan aktiviti keluarga.",
     daysAgo: 85,
     body: `Sambutan Hari OKU akan diadakan dengan pelbagai aktiviti menarik:
@@ -116,8 +116,8 @@ Pengangkutan disediakan. Tempat terhad kepada 40 orang.`,
 Semua warga UUM dialu-alukan hadir.`,
   },
   {
-    slug: "ujian-kongsi-pengalaman-ibu-bapa",
-    title: "[UJIAN] Sesi Kongsi Pengalaman Ibu Bapa",
+    slug: "kongsi-pengalaman-ibu-bapa",
+    title: "Sesi Kongsi Pengalaman Ibu Bapa",
     excerpt: "Ruang santai untuk ibu bapa berkongsi cabaran dan tips membesarkan anak istimewa.",
     daysAgo: 100,
     body: `Sesi ini dijalankan secara santai dan tertutup untuk ahli sahaja.
@@ -127,8 +127,8 @@ Semua warga UUM dialu-alukan hadir.`,
 Minum petang disediakan.`,
   },
   {
-    slug: "ujian-laporan-aktiviti-tahunan",
-    title: "[UJIAN] Laporan Aktiviti Persatuan Tahun Lalu",
+    slug: "laporan-aktiviti-tahunan",
+    title: "Laporan Aktiviti Persatuan Tahun Lalu",
     excerpt: "Ringkasan program dan pencapaian persatuan sepanjang tahun lalu.",
     daysAgo: 120,
     body: `Sepanjang tahun lalu, persatuan telah menganjurkan:
@@ -145,8 +145,8 @@ Terima kasih kepada semua ahli dan penaja atas sokongan anda.`,
 const PAGES = [
   {
     type: "page", order: 1, daysAgo: 150,
-    slug: "ujian-tentang-kami",
-    title: "[UJIAN] Tentang Kami",
+    slug: "tentang-kami",
+    title: "Tentang Kami",
     excerpt: "Mengenali persatuan, visi dan misi kami.",
     body: `## Visi
 
@@ -169,8 +169,8 @@ Menjadi komuniti sokongan utama bagi staf UUM yang membesarkan anak istimewa.
   },
   {
     type: "page", order: 2, daysAgo: 150,
-    slug: "ujian-yuran-keahlian",
-    title: "[UJIAN] Yuran & Keahlian",
+    slug: "yuran-keahlian",
+    title: "Yuran & Keahlian",
     excerpt: "Maklumat yuran dan cara menjadi ahli.",
     body: `Keahlian dibuka kepada **staf UUM** yang mempunyai anak istimewa (OKU).
 
@@ -187,8 +187,8 @@ Menjadi komuniti sokongan utama bagi staf UUM yang membesarkan anak istimewa.
   },
   {
     type: "page", order: 3, daysAgo: 150,
-    slug: "ujian-soalan-lazim",
-    title: "[UJIAN] Soalan Lazim",
+    slug: "soalan-lazim",
+    title: "Soalan Lazim",
     excerpt: "Jawapan kepada soalan yang kerap ditanya.",
     body: `### Siapa yang boleh menjadi ahli?
 
@@ -204,8 +204,8 @@ Setiausaha akan menghantar pautan kemas kini peribadi kepada anda.`,
   },
   {
     type: "page", order: 4, daysAgo: 150,
-    slug: "ujian-hubungi-kami",
-    title: "[UJIAN] Hubungi Kami",
+    slug: "hubungi-kami",
+    title: "Hubungi Kami",
     excerpt: "Cara menghubungi persatuan.",
     body: `**Alamat:**
 Universiti Utara Malaysia
@@ -219,7 +219,8 @@ Waktu pejabat: Isnin hingga Jumaat, 8.00 pagi – 5.00 petang.`,
 ];
 
 const SHEET = "Content";
-const isDummy = (r) => r.slug.startsWith("ujian-") && r.title.startsWith("[UJIAN]");
+const DUMMY_SLUGS = new Set([...POSTS, ...PAGES].map((p) => p.slug));
+const isDummy = (r) => DUMMY_SLUGS.has(r.slug);
 // Placeholder photo, fixed per post (same seed = same picture), 16:9 like the site's image frames
 const coverFor = (slug) => `https://picsum.photos/seed/${slug}/1200/675`;
 
@@ -234,9 +235,9 @@ async function setPublished(on) {
   if (otherDrafts.length) console.log(`Other (non-dummy) drafts left untouched: ${otherDrafts.map((r) => `${r.row.type}: ${r.row.title}`).join(" | ")}`);
 }
 
-/** Gives every dummy item a placeholder cover image (only fills empty ones). */
+/** Gives every dummy post a placeholder cover image (only fills empty ones). Pages have no cover. */
 async function covers() {
-  const targets = (await readRows(SHEET)).filter((r) => isDummy(r.row) && !r.row.coverImage);
+  const targets = (await readRows(SHEET)).filter((r) => isDummy(r.row) && r.row.type === "post" && !r.row.coverImage);
   if (!targets.length) return console.log("All dummy items already have a cover image.");
   await setColumn(SHEET, "coverImage", targets.map((r) => ({ rowNumber: r.rowNumber, value: coverFor(r.row.slug) })));
   console.log(`Set cover image on ${targets.length} dummy item(s).`);
@@ -253,7 +254,7 @@ async function add() {
       // Pages are added live and in the site menu; posts are added as drafts
       return {
         id: crypto.randomUUID().slice(0, 8), type: page ? "page" : "post", slug: p.slug, title: p.title,
-        excerpt: p.excerpt, body: p.body, coverImage: coverFor(p.slug), published: page ? "TRUE" : "FALSE",
+        excerpt: p.excerpt, body: p.body, coverImage: page ? "" : coverFor(p.slug), published: page ? "TRUE" : "FALSE",
         showInNav: page ? "TRUE" : "FALSE", order: String(p.order ?? 0), createdAt: at, updatedAt: at,
       };
     });

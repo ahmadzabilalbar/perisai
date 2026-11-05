@@ -4,11 +4,10 @@
 //   node --env-file=.env.local scripts/dummy-members.mjs details   # re-picks specific OKU conditions on dummy children
 //   node --env-file=.env.local scripts/dummy-members.mjs remove
 //
-// Every dummy member has a name starting with "[UJIAN]" and notes equal to MARKER, and an
-// @example.com email. "remove" deletes only those members plus their children and payments.
+// Every dummy member has an @example.com email (real members never do). "remove" deletes only
+// those members plus their children and payments.
 import { appendRows, deleteRows, OKU_DETAILS, readRows, setColumn } from "./sheet-lib.mjs";
 
-const MARKER = "DATA UJIAN - boleh dipadam";
 
 // paidDaysAgo: days since last payment (null = never paid). Child ages are in years.
 const MEMBERS = [
@@ -81,7 +80,7 @@ const addYears = (date, years) => {
   d.setUTCDate(d.getUTCDate() - 1);
   return d.toISOString().slice(0, 10);
 };
-const isDummy = (m) => m.notes === MARKER && m.name.startsWith("[UJIAN]");
+const isDummy = (m) => m.email.endsWith("@example.com");
 
 /** Varied specific conditions for a child's OKU types; `seed` keeps it stable. About 1 in 5 types left unspecified. */
 let seed = 0;
@@ -107,7 +106,7 @@ async function add() {
   const outMembers = [], outChildren = [], outPayments = [];
 
   MEMBERS.forEach((d, i) => {
-    const name = `[UJIAN] ${d.name}`;
+    const name = d.name;
     if (existingNames.has(name)) return; // already added by an earlier run
     while (usedStaff.has(String(staff))) staff++;
     const memberId = id();
@@ -116,15 +115,15 @@ async function add() {
     const paidUntil = paid && d.type === "Annual" ? addYears(paid, 1) : "";
     outMembers.push({
       id: memberId, memberNo: `M${String(++maxNo).padStart(4, "0")}`, staffNo: String(staff++), name,
-      email: `ujian${i + 1}@example.com`, phone: `012-000 00${String(i + 1).padStart(2, "0")}`,
+      email: `ahli${i + 1}@example.com`, phone: `012-000 00${String(i + 1).padStart(2, "0")}`,
       address: "Universiti Utara Malaysia, 06010 Sintok, Kedah", membershipType: d.type, feeStatus: d.fee,
       paidUntil, lastPaymentDate: paid, lastPaymentAmount: amount, joinDate: day(-d.joinDaysAgo),
-      notes: MARKER, createdAt: now, updatedAt: now, editToken: "",
+      notes: "", createdAt: now, updatedAt: now, editToken: "",
     });
     if (paid) {
       outPayments.push({
         id: id(), memberId, memberName: name, date: paid, type: d.type, amount,
-        coverage: d.type === "Lifetime" ? "Lifetime" : `${paid} → ${paidUntil}`, note: MARKER,
+        coverage: d.type === "Lifetime" ? "Lifetime" : `${paid} → ${paidUntil}`, note: "",
       });
     }
     for (const [cname, age, gender, types] of d.children) {
@@ -148,7 +147,7 @@ async function remove() {
   if (!members.length) return console.log("No dummy members found.");
   const ids = new Set(members.map((r) => r.row.id));
   const children = (await readRows("Children")).filter((r) => ids.has(r.row.memberId));
-  const payments = (await readRows("Payments")).filter((r) => ids.has(r.row.memberId) && r.row.note === MARKER);
+  const payments = (await readRows("Payments")).filter((r) => ids.has(r.row.memberId));
   await deleteRows("Payments", payments.map((r) => r.rowNumber));
   await deleteRows("Children", children.map((r) => r.rowNumber));
   await deleteRows("Members", members.map((r) => r.rowNumber));

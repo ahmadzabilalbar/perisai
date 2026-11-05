@@ -49,10 +49,10 @@ function slugify(s: string) {
 
 /** Email + password sign-in (passwords are set per user in Users & access). */
 export async function login(_: FormState, fd: FormData): Promise<FormState> {
-  const session = await checkUserPassword(str(fd, "email"), String(fd.get("password") ?? ""));
+  const session = await checkUserPassword(str(fd, "login"), String(fd.get("password") ?? ""));
   if (!session) {
     await new Promise((r) => setTimeout(r, 800)); // slow down guessing
-    return { error: "E-mel atau kata laluan tidak sah." };
+    return { error: "E-mel/nama pengguna atau kata laluan tidak sah." };
   }
   await createSession(session);
   redirect("/admin");
@@ -324,6 +324,20 @@ function checkNewPassword(password: string) {
   return null;
 }
 
+const USERNAME_RE = /^[a-z0-9._-]{3,30}$/;
+
+/** Checks a new username ("" = none). Returns an error message, or null if it's fine. */
+async function checkUsername(username: string, email: string) {
+  if (!username) return null;
+  if (!USERNAME_RE.test(username)) {
+    return "Nama pengguna mesti 3–30 aksara: huruf kecil, nombor, titik, sengkang atau garis bawah sahaja.";
+  }
+  if ((await getUsers()).some((u) => u.username === username && u.email !== email)) {
+    return `Nama pengguna "${username}" telah digunakan.`;
+  }
+  return null;
+}
+
 export async function addUser(_: FormState, fd: FormData): Promise<FormState> {
   const me = await requireSuperAdmin();
   const email = str(fd, "email").toLowerCase();
@@ -333,6 +347,9 @@ export async function addUser(_: FormState, fd: FormData): Promise<FormState> {
   if ((await getUsers()).some((u) => u.email === email)) return { error: `${email} telah pun ditambah.` };
   const pwError = checkNewPassword(password);
   if (pwError) return { error: pwError };
+  const username = str(fd, "username").toLowerCase();
+  const unError = await checkUsername(username, email);
+  if (unError) return { error: unError };
 
   try {
     // New admins always start as view-only; the super admin upgrades them later
@@ -344,6 +361,7 @@ export async function addUser(_: FormState, fd: FormData): Promise<FormState> {
       createdAt: nowIso(),
       passwordHash: await hashPassword(password),
       passwordUpdatedAt: nowIso(),
+      username,
     });
   } catch (e) {
     return { error: (e as Error).message };
@@ -375,6 +393,23 @@ export async function setUserPassword(_: FormState, fd: FormData): Promise<FormS
   }
   updateTag(TAGS.users);
   return { ok: "Kata laluan dikemas kini." };
+}
+
+/** Super admin sets, changes or clears ("") a user's username. The user must already have a row (super admins get one when their password is set). */
+export async function setUsername(_: FormState, fd: FormData): Promise<FormState> {
+  await requireSuperAdmin();
+  const email = str(fd, "email").toLowerCase();
+  const username = str(fd, "username").toLowerCase();
+  if (!(await getUsers()).some((u) => u.email === email)) return { error: "Pengguna tidak dijumpai." };
+  const unError = await checkUsername(username, email);
+  if (unError) return { error: unError };
+  try {
+    await update("Users", email, { username }, "email");
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+  updateTag(TAGS.users);
+  return { ok: username ? `Nama pengguna ditetapkan: ${username}` : "Nama pengguna dibuang." };
 }
 
 export async function setUserRole(email: string, role: "admin" | "viewer") {

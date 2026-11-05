@@ -5,7 +5,7 @@ A membership management system with a public website, built on **Next.js 16 + Ta
 ## Features
 
 **Admin (`/admin`)**
-- **Sign in** with **email + password** (set per user by the super admin) or **Google**, with three roles:
+- **Sign in** with **email or username + password** (set per user by the super admin) or **Google**, with three roles:
   - **Super admin**: addresses in `SUPERADMIN_EMAILS`. Full access, plus **Users & access** to add people, set and reset passwords, and change roles.
   - **Admin**: can view and update everything.
   - **View only**: can see every admin page but cannot change anything. New users always start here, and the super admin upgrades them to Admin when needed.
@@ -39,7 +39,7 @@ The app **creates the tabs and header rows automatically** on first use:
 | `Payments` | Payment log (one row per payment) |
 | `Content` | Pages and news posts |
 | `Settings` | Key/value website settings |
-| `Users` | Email addresses with admin access, their role (`admin` / `viewer`) and password hash |
+| `Users` | Email addresses with admin access, their role (`admin` / `viewer`), password hash and optional username (unique, lowercase, used instead of the email when signing in) |
 | `LoginCodes` | Temporary email sign-in codes (hashed; removed after use) |
 
 You can also view or edit data directly in the sheet. Changes made in the sheet appear on the site within about 5 minutes, or immediately after any admin save.
@@ -55,7 +55,7 @@ The migration matches columns by header name, so data follows its column. Column
 
 The OKU options (`OKU_TYPES`, `OKU_DETAILS` in `src/lib/format.ts`) follow JKM's official registration categories. Specific conditions are stored by name, so renaming an option means records saved under the old name no longer match it.
 
-Test data: `scripts/dummy-members.mjs` and `scripts/dummy-news.mjs` add and remove `[UJIAN]` records (run either without arguments for usage).
+Test data: `scripts/dummy-members.mjs` and `scripts/dummy-news.mjs` add and remove test records (members with an `@example.com` email; pages and news with the slugs listed in the script) (run either without arguments for usage).
 
 To start fresh after testing on the live site, `scripts/reset-data.mjs` deletes **every** row in `Members`, `Children`, `Payments`, `LoginCodes` and `Content`, including records testers typed in. `Settings` and `Users` are kept. Add `--keep-content` to keep pages and news. It's a dry run unless you pass `--apply`. To undo, use File → Version history in the sheet.
 

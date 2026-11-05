@@ -10,7 +10,7 @@ export function AddUserForm() {
   return (
     <form action={action} className="card space-y-4 p-5 sm:p-6">
       <h2 className="font-semibold text-slate-900">Tambah pengguna</h2>
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label className="label" htmlFor="u-email">E-mel *</label>
           <input id="u-email" name="email" type="email" required placeholder="nama@uum.edu.my" className="input" />
@@ -18,6 +18,19 @@ export function AddUserForm() {
         <div>
           <label className="label" htmlFor="u-name">Nama</label>
           <input id="u-name" name="name" className="input" />
+        </div>
+        <div>
+          <label className="label" htmlFor="u-username">Nama pengguna</label>
+          <input
+            id="u-username"
+            name="username"
+            autoCapitalize="none"
+            spellCheck={false}
+            pattern="[a-zA-Z0-9._\-]{3,30}"
+            title="3–30 aksara: huruf, nombor, titik, sengkang atau garis bawah"
+            placeholder="Pilihan, cth. ali"
+            className="input"
+          />
         </div>
         <div>
           <label className="label" htmlFor="u-password">Kata laluan *</label>
@@ -36,7 +49,7 @@ export function AddUserForm() {
       <FormMessage state={state} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-slate-500">
-          Mereka log masuk dengan e-mel dan kata laluan ini, dan bermula dengan akses lihat sahaja sehingga anda menaik taraf mereka.
+          Mereka log masuk dengan e-mel (atau nama pengguna, jika ditetapkan) dan kata laluan ini, dan bermula dengan akses lihat sahaja sehingga anda menaik taraf mereka.
         </p>
         <SubmitButton pendingText="Menambah…">Tambah pengguna</SubmitButton>
       </div>

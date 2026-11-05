@@ -246,6 +246,8 @@ export interface AdminUser {
   /** scrypt hash; server-only, never send to the browser */
   passwordHash: string;
   passwordUpdatedAt: string;
+  /** optional sign-in name (lowercase), used instead of the email on the login form */
+  username: string;
 }
 
 export const getUsers = unstable_cache(
@@ -257,6 +259,7 @@ export const getUsers = unstable_cache(
       .map((r) => ({
         ...(r as unknown as AdminUser),
         email: r.email.trim().toLowerCase(),
+        username: (r.username ?? "").trim().toLowerCase(),
         role: r.role === "admin" ? "admin" : "viewer",
       }));
   },
