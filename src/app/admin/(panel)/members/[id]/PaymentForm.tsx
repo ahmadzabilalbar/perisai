@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { FormMessage } from "@/components/FormMessage";
 import { SubmitButton } from "@/components/SubmitButton";
-import { today } from "@/lib/format";
+import { MEMBERSHIP_LABEL, today } from "@/lib/format";
 import { recordPayment } from "../../../actions";
 
 export function PaymentForm({
@@ -28,9 +28,9 @@ export function PaymentForm({
   return (
     <form action={action} className="card space-y-4 p-5">
       <div>
-        <h2 className="font-semibold text-slate-900">Record payment</h2>
+        <h2 className="font-semibold text-slate-900">Rekod bayaran</h2>
         <p className="text-xs text-slate-500">
-          Annual payments extend validity from the current expiry date (or today if expired).
+          Bayaran tahunan melanjutkan tempoh sah dari tarikh tamat semasa (atau hari ini jika sudah tamat tempoh).
         </p>
       </div>
       <input type="hidden" name="id" value={memberId} />
@@ -42,7 +42,7 @@ export function PaymentForm({
             className="flex cursor-pointer items-center justify-center rounded-xl py-2 text-sm font-medium ring-1 ring-slate-200 has-[:checked]:bg-brand-600 has-[:checked]:text-white has-[:checked]:ring-brand-600"
           >
             <input type="radio" name="type" value={t} checked={type === t} onChange={() => setType(t)} className="sr-only" />
-            {t}
+            {MEMBERSHIP_LABEL[t]}
           </label>
         ))}
       </div>
@@ -50,7 +50,7 @@ export function PaymentForm({
       <div className="grid grid-cols-2 gap-3">
         {type === "Annual" && (
           <div>
-            <label className="label">Years</label>
+            <label className="label">Tahun</label>
             <select
               name="years"
               value={years}
@@ -66,22 +66,22 @@ export function PaymentForm({
           </div>
         )}
         <div className={type === "Lifetime" ? "col-span-2" : ""}>
-          <label className="label">Amount ({currency})</label>
+          <label className="label">Jumlah ({currency})</label>
           <input key={suggested} name="amount" inputMode="decimal" defaultValue={suggested} className="input" />
         </div>
       </div>
       <div>
-        <label className="label">Payment date</label>
+        <label className="label">Tarikh bayaran</label>
         <input name="date" type="date" defaultValue={today()} className="input" />
       </div>
       <div>
-        <label className="label">Note</label>
-        <input name="note" placeholder="e.g. Bank transfer ref #123" className="input" />
+        <label className="label">Catatan</label>
+        <input name="note" placeholder="cth. Pindahan bank ruj. #123" className="input" />
       </div>
 
       <FormMessage state={state} />
-      <SubmitButton className="btn-primary w-full" pendingText="Recording…">
-        Record payment
+      <SubmitButton className="btn-primary w-full" pendingText="Merekod…">
+        Rekod bayaran
       </SubmitButton>
     </form>
   );

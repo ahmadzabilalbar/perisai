@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { FormMessage } from "@/components/FormMessage";
+import { PasswordInput } from "@/components/PasswordInput";
 import { SubmitButton } from "@/components/SubmitButton";
 import { login } from "../actions";
 
@@ -11,7 +12,7 @@ export function LoginForm() {
     <form action={action} className="space-y-3">
       <div>
         <label htmlFor="email" className="label">
-          Email
+          E-mel
         </label>
         <input
           id="email"
@@ -19,19 +20,19 @@ export function LoginForm() {
           type="email"
           required
           autoComplete="username"
-          placeholder="name@uum.edu.my"
+          placeholder="nama@uum.edu.my"
           className="input"
         />
       </div>
       <div>
         <label htmlFor="password" className="label">
-          Password
+          Kata laluan
         </label>
-        <input id="password" name="password" type="password" required autoComplete="current-password" className="input" />
+        <PasswordInput id="password" name="password" required autoComplete="current-password" />
       </div>
       <FormMessage state={state} />
-      <SubmitButton className="btn-primary w-full" pendingText="Signing in…">
-        Sign in
+      <SubmitButton className="btn-primary w-full" pendingText="Sedang log masuk…">
+        Log masuk
       </SubmitButton>
     </form>
   );

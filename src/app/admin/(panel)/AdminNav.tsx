@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
+  IconChart,
   IconCog,
   IconDoc,
   IconExternal,
@@ -18,14 +19,15 @@ import { LogoMark } from "@/components/Logo";
 import { logout } from "../actions";
 
 const NAV = [
-  { href: "/admin", label: "Dashboard", icon: IconHome },
-  { href: "/admin/members", label: "Members", icon: IconUsers },
-  { href: "/admin/content", label: "Pages & News", icon: IconDoc },
-  { href: "/admin/settings", label: "Website settings", icon: IconCog },
+  { href: "/admin", label: "Papan Pemuka", icon: IconHome },
+  { href: "/admin/members", label: "Ahli", icon: IconUsers },
+  { href: "/admin/statistik", label: "Statistik", icon: IconChart },
+  { href: "/admin/content", label: "Halaman & Berita", icon: IconDoc },
+  { href: "/admin/settings", label: "Tetapan laman web", icon: IconCog },
 ];
 
 export function AdminNav({ user, role, isSuperAdmin }: { user: string; role: string; isSuperAdmin: boolean }) {
-  const nav = isSuperAdmin ? [...NAV, { href: "/admin/users", label: "Users & access", icon: IconShield }] : NAV;
+  const nav = isSuperAdmin ? [...NAV, { href: "/admin/users", label: "Pengguna & akses", icon: IconShield }] : NAV;
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [pathname]);
@@ -36,7 +38,7 @@ export function AdminNav({ user, role, isSuperAdmin }: { user: string; role: str
     <div className="flex h-full flex-col">
       <Link href="/admin" className="flex items-center gap-2.5 px-6 py-5 font-display text-lg font-bold text-white">
         <LogoMark className="size-8" />
-        Admin
+        Pentadbir
       </Link>
       <nav className="flex-1 space-y-1 px-3">
         {nav.map(({ href, label, icon: Icon }) => (
@@ -65,12 +67,12 @@ export function AdminNav({ user, role, isSuperAdmin }: { user: string; role: str
           className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white"
         >
           <IconExternal className="size-5" />
-          View website
+          Lihat laman web
         </Link>
         <form action={logout}>
           <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white">
             <IconLogout className="size-5" />
-            Sign out
+            Log keluar
           </button>
         </form>
       </div>
@@ -80,15 +82,15 @@ export function AdminNav({ user, role, isSuperAdmin }: { user: string; role: str
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 hidden w-64 bg-slate-950 lg:block">{content}</aside>
+      <aside className="fixed inset-y-0 left-0 hidden w-64 bg-slate-950 lg:block print:hidden">{content}</aside>
 
       {/* Mobile top bar */}
-      <div className="sticky top-0 z-30 flex items-center justify-between bg-slate-950 px-4 py-3 lg:hidden">
+      <div className="sticky top-0 z-30 flex items-center justify-between bg-slate-950 px-4 py-3 lg:hidden print:hidden">
         <Link href="/admin" className="flex items-center gap-2 font-display font-bold text-white">
           <LogoMark className="size-7" />
-          Admin
+          Pentadbir
         </Link>
-        <button onClick={() => setOpen(true)} className="rounded-lg p-2 text-slate-300" aria-label="Open menu">
+        <button onClick={() => setOpen(true)} className="rounded-lg p-2 text-slate-300" aria-label="Buka menu">
           <IconMenu className="size-6" />
         </button>
       </div>
@@ -100,7 +102,7 @@ export function AdminNav({ user, role, isSuperAdmin }: { user: string; role: str
             <button
               onClick={() => setOpen(false)}
               className="absolute top-4 right-4 rounded-lg p-1.5 text-slate-400"
-              aria-label="Close menu"
+              aria-label="Tutup menu"
             >
               <IconX className="size-5" />
             </button>

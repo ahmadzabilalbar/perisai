@@ -31,6 +31,18 @@
   }
 }
 
+/* Printing / "Save as PDF": keep bar and badge colours, and use the full page width */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
 @utility btn {
   @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition
     focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500

@@ -3,7 +3,7 @@ import { Markdown } from "@/components/Markdown";
 import { getSettings } from "@/lib/data";
 import { JoinForm } from "./JoinForm";
 
-export const metadata: Metadata = { title: "Become a member" };
+export const metadata: Metadata = { title: "Daftar sebagai ahli" };
 
 export default async function JoinPage({ searchParams }: { searchParams: Promise<{ plan?: string }> }) {
   const [s, { plan }] = await Promise.all([getSettings(), searchParams]);
@@ -11,23 +11,23 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
   return (
     <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[2fr_3fr]">
       <div>
-        <h1 className="font-display text-4xl font-extrabold tracking-tight text-slate-900">Become a member</h1>
+        <h1 className="font-display text-4xl font-extrabold tracking-tight text-slate-900">Daftar sebagai ahli</h1>
         <p className="mt-4 text-lg text-slate-600">
-          Fill in the form and our team will review your application. {s.feeNotes}
+          Isi borang ini dan pihak kami akan menyemak permohonan anda. {s.feeNotes}
         </p>
         <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-brand-50 px-4 py-2 text-sm font-medium text-brand-800 ring-1 ring-brand-100">
           <span className="size-1.5 rounded-full bg-brand-500" />
-          Membership is open to UUM staff only.
+          Keahlian terbuka kepada staf UUM sahaja.
         </p>
         {s.bankDetails && (
           <div className="mt-8 rounded-2xl bg-slate-50 p-6 ring-1 ring-slate-200">
-            <h2 className="font-display font-semibold text-slate-900">Payment details</h2>
+            <h2 className="font-display font-semibold text-slate-900">Butiran bayaran</h2>
             <Markdown className="prose-sm mt-2">{s.bankDetails}</Markdown>
           </div>
         )}
       </div>
       {s.joinEnabled === "FALSE" ? (
-        <div className="card p-10 text-center text-slate-600">Applications are currently closed.</div>
+        <div className="card p-10 text-center text-slate-600">Permohonan ditutup buat masa ini.</div>
       ) : (
         <JoinForm
           defaultPlan={plan === "Lifetime" ? "Lifetime" : "Annual"}

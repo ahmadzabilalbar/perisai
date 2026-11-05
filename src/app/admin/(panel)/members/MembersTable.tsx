@@ -4,17 +4,33 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { StatusBadge } from "@/components/StatusBadge";
 import { IconDownload, IconSearch } from "@/components/Icons";
-import { formatDate, type MemberState } from "@/lib/format";
+import { formatDate, MEMBERSHIP_LABEL, STATE_LABEL, type MemberState } from "@/lib/format";
 import type { Member } from "@/lib/data";
 
-type Row = Member & { state: MemberState };
+type Row = Member & { state: MemberState; childCount: number; childNames: string; okuTypes: string };
 
 const FILTERS: ("All" | MemberState)[] = ["All", "Active", "Lifetime", "Expiring", "Expired", "Unpaid", "Pending"];
 
-export function MembersTable({ members }: { members: Row[] }) {
+export type ChildFilter = "All" | "Some" | "None";
+export type TypeFilter = "All" | "Annual" | "Lifetime";
+
+/** `initialStates` / `initialChildren` pre-select filters (e.g. from a dashboard or statistics link). */
+export function MembersTable({
+  members,
+  initialStates = [],
+  initialChildren = "All",
+  initialType = "All",
+}: {
+  members: Row[];
+  initialStates?: MemberState[];
+  initialChildren?: ChildFilter;
+  initialType?: TypeFilter;
+}) {
   const [q, setQ] = useState("");
-  const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
-  const [type, setType] = useState<"All" | "Annual" | "Lifetime">("All");
+  // Several states can be selected at once (dashboard figures combine e.g. Active + Expiring)
+  const [filter, setFilter] = useState<MemberState[]>(initialStates);
+  const [type, setType] = useState<TypeFilter>(initialType);
+  const [kids, setKids] = useState<ChildFilter>(initialChildren);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { All: members.length };
@@ -25,15 +41,16 @@ export function MembersTable({ members }: { members: Row[] }) {
   const rows = useMemo(() => {
     const term = q.trim().toLowerCase();
     return members
-      .filter((m) => filter === "All" || m.state === filter)
+      .filter((m) => !filter.length || filter.includes(m.state))
       .filter((m) => type === "All" || m.membershipType === type)
+      .filter((m) => kids === "All" || (kids === "None" ? m.childCount === 0 : m.childCount > 0))
       .filter(
         (m) =>
           !term ||
-          [m.name, m.email, m.phone, m.memberNo, m.staffNo, m.icNo].some((v) => v?.toLowerCase().includes(term)),
+          [m.name, m.email, m.phone, m.memberNo, m.staffNo, m.childNames].some((v) => v?.toLowerCase().includes(term)),
       )
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [members, q, filter, type]);
+  }, [members, q, filter, type, kids]);
 
   function exportCsv() {
     const cols: (keyof Row)[] = [
@@ -42,15 +59,21 @@ export function MembersTable({ members }: { members: Row[] }) {
       "name",
       "email",
       "phone",
-      "icNo",
       "membershipType",
       "state",
       "paidUntil",
       "lastPaymentDate",
       "lastPaymentAmount",
       "joinDate",
+      "childCount",
+      "childNames",
+      "okuTypes",
     ];
-    const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    // Prefix values that spreadsheet apps would run as formulas (names come from the public join form)
+    const esc = (v: unknown) => {
+      const s = String(v ?? "");
+      return `"${(/^[=+\-@\t\r]/.test(s) ? `'${s}` : s).replace(/"/g, '""')}"`;
+    };
     const csv = [cols.join(","), ...rows.map((r) => cols.map((c) => esc(r[c])).join(","))].join("\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
     const a = Object.assign(document.createElement("a"), { href: url, download: `members-${Date.now()}.csv` });
@@ -66,17 +89,22 @@ export function MembersTable({ members }: { members: Row[] }) {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search name, staff no, email, phone…"
+            placeholder="Cari nama, no. staf, e-mel, telefon…"
             className="input !pl-9"
           />
         </div>
         <select value={type} onChange={(e) => setType(e.target.value as typeof type)} className="input sm:!w-44">
-          <option value="All">All types</option>
-          <option value="Annual">Annual</option>
-          <option value="Lifetime">Lifetime</option>
+          <option value="All">Semua jenis</option>
+          <option value="Annual">{MEMBERSHIP_LABEL.Annual}</option>
+          <option value="Lifetime">{MEMBERSHIP_LABEL.Lifetime}</option>
+        </select>
+        <select value={kids} onChange={(e) => setKids(e.target.value as ChildFilter)} className="input sm:!w-48">
+          <option value="All">Semua (anak)</option>
+          <option value="Some">Sudah daftar anak</option>
+          <option value="None">Belum daftar anak</option>
         </select>
         <button onClick={exportCsv} className="btn-secondary">
-          <IconDownload className="size-4" /> Export CSV
+          <IconDownload className="size-4" /> Eksport CSV
         </button>
       </div>
 
@@ -84,18 +112,18 @@ export function MembersTable({ members }: { members: Row[] }) {
         {FILTERS.map((f) => (
           <button
             key={f}
-            onClick={() => setFilter(f)}
+            onClick={() => setFilter(f === "All" ? [] : [f])}
             className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-medium transition ${
-              filter === f ? "bg-slate-900 text-white" : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
+              (f === "All" ? !filter.length : filter.includes(f)) ? "bg-slate-900 text-white" : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
             }`}
           >
-            {f} <span className="opacity-60">{counts[f] ?? 0}</span>
+            {f === "All" ? "Semua" : STATE_LABEL[f]} <span className="opacity-60">{counts[f] ?? 0}</span>
           </button>
         ))}
       </div>
 
       {rows.length === 0 ? (
-        <div className="card px-6 py-16 text-center text-sm text-slate-500">No members match your filters.</div>
+        <div className="card px-6 py-16 text-center text-sm text-slate-500">Tiada ahli yang sepadan dengan penapis anda.</div>
       ) : (
         <>
           {/* Desktop table */}
@@ -103,11 +131,12 @@ export function MembersTable({ members }: { members: Row[] }) {
             <table className="w-full text-left text-sm">
               <thead className="bg-slate-50 text-xs font-semibold tracking-wide text-slate-500 uppercase">
                 <tr>
-                  <th className="px-5 py-3">Member</th>
-                  <th className="px-5 py-3">Contact</th>
-                  <th className="px-5 py-3">Type</th>
+                  <th className="px-5 py-3">Ahli</th>
+                  <th className="px-5 py-3">Hubungan</th>
+                  <th className="px-5 py-3">Anak</th>
+                  <th className="px-5 py-3">Jenis</th>
                   <th className="px-5 py-3">Status</th>
-                  <th className="px-5 py-3">Valid until</th>
+                  <th className="px-5 py-3">Sah sehingga</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -118,7 +147,7 @@ export function MembersTable({ members }: { members: Row[] }) {
                         <span className="font-medium text-slate-900 group-hover:text-brand-700">{m.name}</span>
                         <span className="block font-mono text-xs text-slate-400">
                           {m.memberNo}
-                          {m.staffNo && ` · Staff ${m.staffNo}`}
+                          {m.staffNo && ` · Staf ${m.staffNo}`}
                         </span>
                       </Link>
                     </td>
@@ -126,7 +155,10 @@ export function MembersTable({ members }: { members: Row[] }) {
                       <span className="block">{m.email || "—"}</span>
                       <span className="block text-xs text-slate-400">{m.phone}</span>
                     </td>
-                    <td className="px-5 py-3 text-slate-600">{m.membershipType}</td>
+                    <td className="px-5 py-3 text-slate-600">
+                      {m.childCount || <span className="text-amber-600">Tiada</span>}
+                    </td>
+                    <td className="px-5 py-3 text-slate-600">{MEMBERSHIP_LABEL[m.membershipType]}</td>
                     <td className="px-5 py-3">
                       <StatusBadge state={m.state} />
                     </td>
@@ -149,15 +181,17 @@ export function MembersTable({ members }: { members: Row[] }) {
                       <p className="truncate font-medium text-slate-900">{m.name}</p>
                       <p className="font-mono text-xs text-slate-400">
                         {m.memberNo}
-                        {m.staffNo && ` · Staff ${m.staffNo}`}
+                        {m.staffNo && ` · Staf ${m.staffNo}`}
                       </p>
                     </div>
                     <StatusBadge state={m.state} />
                   </div>
                   <div className="mt-3 flex justify-between text-xs text-slate-500">
-                    <span>{m.membershipType}</span>
                     <span>
-                      {m.membershipType === "Lifetime" ? "Lifetime" : `Until ${formatDate(m.paidUntil)}`}
+                      {MEMBERSHIP_LABEL[m.membershipType]} · {m.childCount} anak
+                    </span>
+                    <span>
+                      {m.membershipType === "Lifetime" ? MEMBERSHIP_LABEL.Lifetime : `Sehingga ${formatDate(m.paidUntil)}`}
                     </span>
                   </div>
                 </Link>

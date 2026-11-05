@@ -6,7 +6,7 @@ import { removeUser, setUserRole } from "../../actions";
 import { AddUserForm } from "./AddUserForm";
 import { SetPasswordButton } from "./SetPasswordButton";
 
-export const metadata: Metadata = { title: "Users & access" };
+export const metadata: Metadata = { title: "Pengguna & akses" };
 
 export default async function UsersPage() {
   await requireSuperAdmin();
@@ -19,29 +19,30 @@ export default async function UsersPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <h1 className="font-display text-2xl font-bold text-slate-900">Users & access</h1>
+        <h1 className="font-display text-2xl font-bold text-slate-900">Pengguna & akses</h1>
         <p className="text-sm text-slate-500">
-          People who can sign in to the admin area, with their email and password (or Google). New users start with{" "}
-          <strong>view-only</strong> access; upgrade them to <strong>Admin</strong> when they need to make changes.
+          Mereka yang boleh log masuk ke ruang pentadbir, dengan e-mel dan kata laluan (atau Google). Pengguna baharu bermula
+          dengan akses <strong>lihat sahaja</strong>; naik taraf mereka kepada <strong>Pentadbir</strong> apabila mereka perlu
+          membuat perubahan.
         </p>
       </div>
 
       <AddUserForm />
 
       <section className="card overflow-hidden">
-        <h2 className="border-b border-slate-100 px-5 py-4 font-semibold text-slate-900">Access list</h2>
+        <h2 className="border-b border-slate-100 px-5 py-4 font-semibold text-slate-900">Senarai akses</h2>
         <ul className="divide-y divide-slate-100">
           {supers.map((email) => (
             <li key={email} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
               <div className="min-w-0">
                 <p className="truncate font-medium text-slate-900">{email}</p>
                 <p className="text-xs text-slate-500">
-                  Full access, manages users · {hasPassword(email) ? "Password set" : "Google sign-in only"}
+                  Akses penuh, mengurus pengguna · {hasPassword(email) ? "Kata laluan ditetapkan" : "Log masuk Google sahaja"}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <RoleBadge role="superadmin" />
-                <SetPasswordButton email={email} label={hasPassword(email) ? "Change my password" : "Set my password"} />
+                <SetPasswordButton email={email} label={hasPassword(email) ? "Tukar kata laluan saya" : "Tetapkan kata laluan saya"} />
               </div>
             </li>
           ))}
@@ -50,24 +51,24 @@ export default async function UsersPage() {
               <div className="min-w-0">
                 <p className="truncate font-medium text-slate-900">{u.name || u.email}</p>
                 <p className="truncate text-xs text-slate-500">
-                  {u.name ? `${u.email} · ` : ""}Added {formatDate(u.createdAt)} ·{" "}
-                  {u.passwordHash ? `Password set ${formatDate(u.passwordUpdatedAt)}` : "No password"}
+                  {u.name ? `${u.email} · ` : ""}Ditambah {formatDate(u.createdAt)} ·{" "}
+                  {u.passwordHash ? `Kata laluan ditetapkan ${formatDate(u.passwordUpdatedAt)}` : "Tiada kata laluan"}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <RoleBadge role={u.role} />
                 <form action={setUserRole.bind(null, u.email, u.role === "admin" ? "viewer" : "admin")}>
                   <button className="btn-secondary !px-3 !py-1.5 !text-xs">
-                    {u.role === "admin" ? "Change to view only" : "Upgrade to admin"}
+                    {u.role === "admin" ? "Tukar kepada pemerhati" : "Naik taraf kepada pentadbir"}
                   </button>
                 </form>
-                <SetPasswordButton email={u.email} label={u.passwordHash ? "Reset password" : "Set password"} />
+                <SetPasswordButton email={u.email} label={u.passwordHash ? "Set semula kata laluan" : "Tetapkan kata laluan"} />
                 <form action={removeUser.bind(null, u.email)}>
                   <ConfirmButton
-                    message={`Remove ${u.email}? They will lose access immediately.`}
+                    message={`Buang ${u.email}? Mereka akan hilang akses serta-merta.`}
                     className="btn-ghost !px-3 !py-1.5 !text-xs !text-rose-600"
                   >
-                    Remove
+                    Buang
                   </ConfirmButton>
                 </form>
               </div>
@@ -76,7 +77,7 @@ export default async function UsersPage() {
         </ul>
         {users.length === 0 && (
           <p className="border-t border-slate-100 px-5 py-6 text-center text-sm text-slate-500">
-            No other users yet. Add someone above.
+            Belum ada pengguna lain. Tambah seseorang di atas.
           </p>
         )}
       </section>
@@ -90,6 +91,6 @@ function RoleBadge({ role }: { role: "superadmin" | "admin" | "viewer" }) {
     admin: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
     viewer: "bg-sky-50 text-sky-700 ring-sky-600/20",
   }[role];
-  const label = { superadmin: "Super admin", admin: "Admin", viewer: "View only" }[role];
+  const label = { superadmin: "Pentadbir utama", admin: "Pentadbir", viewer: "Pemerhati" }[role];
   return <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${style}`}>{label}</span>;
 }

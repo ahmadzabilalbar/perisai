@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
-import { IconMail, IconPhone, IconPin } from "@/components/Icons";
+import { IconLock, IconMail, IconPhone, IconPin } from "@/components/Icons";
 import { Logo } from "@/components/Logo";
 import { getPublishedPages, getPublishedPosts, getSettings } from "@/lib/data";
 
@@ -9,9 +9,9 @@ export const revalidate = 300;
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const [s, pages, posts] = await Promise.all([getSettings(), getPublishedPages(), getPublishedPosts()]);
   const links = [
-    { href: "/", label: "Home" },
+    { href: "/", label: "Utama" },
     ...pages.filter((p) => p.showInNav).map((p) => ({ href: `/${p.slug}`, label: p.title })),
-    ...(posts.length ? [{ href: "/news", label: "News" }] : []),
+    ...(posts.length ? [{ href: "/news", label: "Berita" }] : []),
   ];
   const joinEnabled = s.joinEnabled !== "FALSE";
 
@@ -27,7 +27,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
             <p className="mt-3 max-w-xs text-sm leading-relaxed">{s.tagline}</p>
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-white">Explore</h3>
+            <h3 className="text-sm font-semibold text-white">Terokai</h3>
             <ul className="mt-3 space-y-2 text-sm">
               {links.map((l) => (
                 <li key={l.href}>
@@ -39,14 +39,14 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
               {joinEnabled && (
                 <li>
                   <Link href="/join" className="hover:text-white">
-                    Join us
+                    Sertai kami
                   </Link>
                 </li>
               )}
             </ul>
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-white">Contact</h3>
+            <h3 className="text-sm font-semibold text-white">Hubungi Kami</h3>
             <ul className="mt-3 space-y-2.5 text-sm">
               {s.contactEmail && (
                 <li className="flex gap-2">
@@ -88,10 +88,10 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         <div className="border-t border-white/10">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-6 text-xs sm:px-6">
             <p>
-              © {new Date().getFullYear()} {s.siteName}. All rights reserved.
+              © {new Date().getFullYear()} {s.siteName}. Hak cipta terpelihara.
             </p>
-            <Link href="/admin" className="hover:text-white">
-              Admin
+            <Link href="/admin" title="Pentadbir" aria-label="Pentadbir" className="hover:text-white">
+              <IconLock className="size-4" />
             </Link>
           </div>
         </div>

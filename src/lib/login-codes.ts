@@ -42,13 +42,13 @@ export async function sendLoginCode(email: string, siteName: string) {
 
   await sendMail({
     to: email,
-    subject: `${code} is your ${siteName} admin sign-in code`,
-    text: `Your ${siteName} admin sign-in code is ${code}.\n\nIt expires in 10 minutes. If you didn't request it, you can ignore this email.`,
+    subject: `${code} ialah kod log masuk pentadbir ${siteName} anda`,
+    text: `Kod log masuk pentadbir ${siteName} anda ialah ${code}.\n\nKod ini akan tamat tempoh dalam masa 10 minit. Jika anda tidak memintanya, sila abaikan e-mel ini.`,
     html: `<div style="font-family:system-ui,sans-serif;max-width:420px;margin:auto;padding:24px;color:#0f172a">
-  <h2 style="margin:0 0 8px">${siteName} admin sign-in</h2>
-  <p style="color:#475569">Use this code to sign in. It expires in 10 minutes.</p>
+  <h2 style="margin:0 0 8px">Log masuk pentadbir ${siteName}</h2>
+  <p style="color:#475569">Gunakan kod ini untuk log masuk. Kod ini akan tamat tempoh dalam masa 10 minit.</p>
   <p style="font-size:32px;font-weight:700;letter-spacing:8px;margin:24px 0;color:#3b59e8">${code}</p>
-  <p style="color:#94a3b8;font-size:13px">If you didn't request this, you can ignore this email.</p>
+  <p style="color:#94a3b8;font-size:13px">Jika anda tidak memintanya, sila abaikan e-mel ini.</p>
 </div>`,
   });
 }

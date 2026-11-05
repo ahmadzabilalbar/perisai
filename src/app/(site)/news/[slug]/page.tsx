@@ -18,7 +18,7 @@ export default async function PostPage({ params }: Props) {
   return (
     <article className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
       <Link href="/news" className="text-sm font-semibold text-brand-600 hover:text-brand-700">
-        ← All news
+        ← Semua berita
       </Link>
       <time className="mt-6 block text-sm text-slate-500">{formatDate(post.createdAt)}</time>
       <h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">

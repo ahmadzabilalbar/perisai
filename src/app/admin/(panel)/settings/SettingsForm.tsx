@@ -11,46 +11,46 @@ type FieldDef = { key: keyof Settings; label: string; type?: "textarea" | "url" 
 
 const GROUPS: { title: string; fields: FieldDef[] }[] = [
   {
-    title: "General",
+    title: "Umum",
     fields: [
-      { key: "siteName", label: "Organisation name" },
-      { key: "tagline", label: "Tagline" },
+      { key: "siteName", label: "Nama pertubuhan" },
+      { key: "tagline", label: "Slogan" },
     ],
   },
   {
-    title: "Homepage",
+    title: "Laman utama",
     fields: [
-      { key: "heroTitle", label: "Hero title", wide: true },
-      { key: "heroSubtitle", label: "Hero subtitle", type: "textarea", wide: true },
-      { key: "heroImage", label: "Hero image URL", type: "url", wide: true, hint: "Leave empty to show the member card illustration." },
-      { key: "aboutTitle", label: "About section title", wide: true },
-      { key: "aboutBody", label: "About section text", type: "textarea", wide: true, hint: "Markdown supported." },
+      { key: "heroTitle", label: "Tajuk utama (hero)", wide: true },
+      { key: "heroSubtitle", label: "Subtajuk utama (hero)", type: "textarea", wide: true },
+      { key: "heroImage", label: "URL gambar utama (hero)", type: "url", wide: true, hint: "Biarkan kosong untuk memaparkan ilustrasi kad ahli." },
+      { key: "aboutTitle", label: "Tajuk bahagian Tentang Kami", wide: true },
+      { key: "aboutBody", label: "Teks bahagian Tentang Kami", type: "textarea", wide: true, hint: "Menyokong Markdown." },
     ],
   },
   {
-    title: "Membership fees",
+    title: "Yuran keahlian",
     fields: [
-      { key: "currency", label: "Currency" },
-      { key: "annualFee", label: "Annual fee" },
-      { key: "lifetimeFee", label: "Lifetime fee" },
-      { key: "feeNotes", label: "Fee notes", type: "textarea", wide: true },
+      { key: "currency", label: "Mata wang" },
+      { key: "annualFee", label: "Yuran tahunan" },
+      { key: "lifetimeFee", label: "Yuran seumur hidup" },
+      { key: "feeNotes", label: "Catatan yuran", type: "textarea", wide: true },
       {
         key: "bankDetails",
-        label: "Payment / bank details",
+        label: "Maklumat bayaran / bank",
         type: "textarea",
         wide: true,
-        hint: "Shown on the Join page. Markdown supported.",
+        hint: "Dipaparkan di halaman Sertai. Menyokong Markdown.",
       },
     ],
   },
   {
-    title: "Contact & social",
+    title: "Hubungan & media sosial",
     fields: [
-      { key: "contactEmail", label: "Email", type: "email" },
-      { key: "contactPhone", label: "Phone" },
-      { key: "address", label: "Address", type: "textarea", wide: true },
-      { key: "facebook", label: "Facebook URL", type: "url" },
-      { key: "instagram", label: "Instagram URL", type: "url" },
+      { key: "contactEmail", label: "E-mel", type: "email" },
+      { key: "contactPhone", label: "No. telefon" },
+      { key: "address", label: "Alamat", type: "textarea", wide: true },
+      { key: "facebook", label: "URL Facebook", type: "url" },
+      { key: "instagram", label: "URL Instagram", type: "url" },
     ],
   },
 ];
@@ -86,8 +86,8 @@ export function SettingsForm({ settings }: { settings: Settings }) {
 
       <div className="card flex items-center justify-between gap-4 p-5 sm:p-6">
         <div>
-          <p className="font-semibold text-slate-900">Accept online applications</p>
-          <p className="text-sm text-slate-500">Show the &quot;Become a member&quot; form on the website</p>
+          <p className="font-semibold text-slate-900">Terima permohonan dalam talian</p>
+          <p className="text-sm text-slate-500">Papar borang &quot;Jadi ahli&quot; di laman web</p>
         </div>
         <input
           type="checkbox"
@@ -102,7 +102,7 @@ export function SettingsForm({ settings }: { settings: Settings }) {
           <div className="flex-1">
             <FormMessage state={state} />
           </div>
-          <SubmitButton>Save settings</SubmitButton>
+          <SubmitButton>Simpan tetapan</SubmitButton>
         </div>
       )}
       </fieldset>

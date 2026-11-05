@@ -12,7 +12,6 @@ export interface Member {
   name: string;
   email: string;
   phone: string;
-  icNo: string;
   address: string;
   membershipType: MembershipType;
   feeStatus: FeeStatus;
@@ -21,6 +20,19 @@ export interface Member {
   lastPaymentAmount: string;
   joinDate: string;
   notes: string;
+  createdAt: string;
+  updatedAt: string;
+  editToken: string;
+}
+
+export interface Child {
+  id: string;
+  memberId: string;
+  name: string;
+  dob: string;
+  gender: string;
+  okuType: string;
+  okuDetail: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -75,17 +87,17 @@ export interface Settings {
 export const DEFAULT_SETTINGS: Settings = {
   siteName: "PERISAI",
   tagline: "Persatuan Staf UUM Yang Mempunyai Anak Istimewa",
-  heroTitle: "Together, we support every special child.",
+  heroTitle: "Bersama, kita menyokong setiap anak istimewa.",
   heroSubtitle:
-    "PERISAI brings together UUM staff who are raising children with special needs, so no family walks this journey alone. Join us for support, information and a caring community.",
+    "PERISAI menghimpunkan staf UUM yang membesarkan anak berkeperluan khas, supaya tiada keluarga yang menempuh perjalanan ini sendirian. Sertai kami untuk mendapatkan sokongan, maklumat dan komuniti yang prihatin.",
   heroImage: "",
-  aboutTitle: "About PERISAI",
+  aboutTitle: "Tentang PERISAI",
   aboutBody:
-    "**PERISAI (Persatuan Staf UUM Yang Mempunyai Anak Istimewa)** is an association of Universiti Utara Malaysia staff who have children with special needs.\n\nWe provide a support network for families, share information and resources, organise programmes and activities for our members and their children, and advocate for a more inclusive campus community.",
+    "**PERISAI (Persatuan Staf UUM Yang Mempunyai Anak Istimewa)** ialah persatuan staf Universiti Utara Malaysia yang mempunyai anak berkeperluan khas.\n\nKami menyediakan rangkaian sokongan untuk keluarga, berkongsi maklumat dan sumber, menganjurkan program serta aktiviti untuk ahli dan anak-anak mereka, dan memperjuangkan komuniti kampus yang lebih inklusif.",
   annualFee: "20",
   lifetimeFee: "100",
   currency: "RM",
-  feeNotes: "Annual membership is valid for 12 months from the date of payment.",
+  feeNotes: "Keahlian tahunan sah selama 12 bulan dari tarikh bayaran.",
   bankDetails: "",
   contactEmail: "",
   contactPhone: "",
@@ -113,18 +125,38 @@ export const getMembers = unstable_cache(
   async (): Promise<Member[]> => {
     if (!isSheetsConfigured()) return [];
     const rows = await readAll("Members");
+    // No IC number column exists (PDPA): only the columns in TABLES.Members are ever read
     return rows.map((r) => ({
       ...(r as unknown as Member),
       membershipType: r.membershipType === "Lifetime" ? "Lifetime" : "Annual",
       feeStatus: (["Paid", "Unpaid", "Pending"].includes(r.feeStatus) ? r.feeStatus : "Unpaid") as FeeStatus,
     }));
   },
-  ["members"],
+  ["members-v2"], // bumped when columns change so old cached rows (e.g. from production) aren't reused
   { tags: [TAGS.members], revalidate: REVALIDATE },
 );
 
 export async function getMember(id: string) {
   return (await getMembers()).find((m) => m.id === id) ?? null;
+}
+
+/** Member for a private update link, or null if the token is unknown. */
+export async function getMemberByToken(token: string) {
+  if (!/^[\w-]{20,}$/.test(token)) return null;
+  return (await getMembers()).find((m) => m.editToken === token) ?? null;
+}
+
+export const getChildren = unstable_cache(
+  async (): Promise<Child[]> => {
+    if (!isSheetsConfigured()) return [];
+    return ((await readAll("Children")) as unknown as Child[]).sort((a, b) => a.dob.localeCompare(b.dob));
+  },
+  ["children-v2"], // bumped when okuDetail was added
+  { tags: [TAGS.members], revalidate: REVALIDATE },
+);
+
+export async function getMemberChildren(memberId: string) {
+  return (await getChildren()).filter((c) => c.memberId === memberId);
 }
 
 export const getPayments = unstable_cache(

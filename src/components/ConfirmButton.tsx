@@ -22,7 +22,7 @@ export function ConfirmButton({
         if (!confirm(message)) e.preventDefault();
       }}
     >
-      {pending ? "Working…" : children}
+      {pending ? "Sedang diproses…" : children}
     </button>
   );
 }

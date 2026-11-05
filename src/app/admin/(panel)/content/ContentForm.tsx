@@ -22,22 +22,22 @@ export function ContentForm({ content, type }: { content?: Content; type: "page"
 
       <div className="card space-y-4 p-5 sm:p-6">
         <div>
-          <label className="label">Title *</label>
+          <label className="label">Tajuk *</label>
           <input name="title" required defaultValue={content?.title} className="input !text-base font-medium" />
         </div>
         <div>
-          <label className="label">Summary</label>
+          <label className="label">Ringkasan</label>
           <textarea
             name="excerpt"
             rows={2}
             defaultValue={content?.excerpt}
-            placeholder="Short description shown in listings and search results"
+            placeholder="Penerangan ringkas yang dipaparkan dalam senarai dan hasil carian"
             className="input"
           />
         </div>
         <div>
           <div className="mb-1.5 flex items-center justify-between">
-            <label className="label !mb-0">Content</label>
+            <label className="label !mb-0">Kandungan</label>
             <div className="flex rounded-lg bg-slate-100 p-0.5 text-xs font-medium">
               {(["write", "preview"] as const).map((t) => (
                 <button
@@ -46,7 +46,7 @@ export function ContentForm({ content, type }: { content?: Content; type: "page"
                   onClick={() => setTab(t)}
                   className={`rounded-md px-3 py-1 capitalize ${tab === t ? "bg-white shadow-sm" : "text-slate-500"}`}
                 >
-                  {t}
+                  {t === "write" ? "Tulis" : "Pratonton"}
                 </button>
               ))}
             </div>
@@ -57,16 +57,16 @@ export function ContentForm({ content, type }: { content?: Content; type: "page"
             onChange={(e) => setBody(e.target.value)}
             rows={18}
             className={`input font-mono !text-[13px] leading-relaxed ${tab === "preview" ? "hidden" : ""}`}
-            placeholder={"## Heading\n\nWrite using **Markdown**. Add images with ![alt](https://…)"}
+            placeholder={"## Tajuk\n\nTulis menggunakan **Markdown**. Tambah gambar dengan ![alt](https://…)"}
           />
           {tab === "preview" && (
             <div className="min-h-[24rem] rounded-xl p-4 ring-1 ring-slate-200">
-              {body ? <Markdown>{body}</Markdown> : <p className="text-sm text-slate-400">Nothing to preview.</p>}
+              {body ? <Markdown>{body}</Markdown> : <p className="text-sm text-slate-400">Tiada apa-apa untuk dipratonton.</p>}
             </div>
           )}
           <p className="mt-1.5 text-xs text-slate-500">
-            Supports Markdown: <code>## Heading</code>, <code>**bold**</code>, <code>[link](url)</code>,{" "}
-            <code>![image](url)</code>, lists and tables.
+            Menyokong Markdown: <code>## Tajuk</code>, <code>**tebal**</code>, <code>[pautan](url)</code>,{" "}
+            <code>![gambar](url)</code>, senarai dan jadual.
           </p>
         </div>
       </div>
@@ -74,7 +74,7 @@ export function ContentForm({ content, type }: { content?: Content; type: "page"
       <aside className="space-y-4">
         <div className="card space-y-4 p-5">
           <label className="flex items-center justify-between gap-3">
-            <span className="text-sm font-medium text-slate-700">Published</span>
+            <span className="text-sm font-medium text-slate-700">Diterbitkan</span>
             <input
               type="checkbox"
               name="published"
@@ -84,7 +84,7 @@ export function ContentForm({ content, type }: { content?: Content; type: "page"
           </label>
           {type === "page" && (
             <label className="flex items-center justify-between gap-3">
-              <span className="text-sm font-medium text-slate-700">Show in menu</span>
+              <span className="text-sm font-medium text-slate-700">Papar di menu</span>
               <input
                 type="checkbox"
                 name="showInNav"
@@ -94,30 +94,30 @@ export function ContentForm({ content, type }: { content?: Content; type: "page"
             </label>
           )}
           <div>
-            <label className="label">URL slug</label>
+            <label className="label">Slug URL</label>
             <div className="flex items-center rounded-xl ring-1 ring-slate-200 ring-inset focus-within:ring-2 focus-within:ring-brand-500">
               <span className="pl-3 text-sm text-slate-400">{type === "post" ? "/news/" : "/"}</span>
               <input
                 name="slug"
                 defaultValue={content?.slug}
-                placeholder="auto from title"
+                placeholder="auto daripada tajuk"
                 className="w-full min-w-0 bg-transparent py-2.5 pr-3 text-sm outline-none"
               />
             </div>
           </div>
           {type === "page" && (
             <div>
-              <label className="label">Menu order</label>
+              <label className="label">Susunan menu</label>
               <input name="order" type="number" defaultValue={content?.order ?? 0} className="input" />
             </div>
           )}
           <div>
-            <label className="label">Cover image URL</label>
+            <label className="label">URL gambar muka depan</label>
             <input name="coverImage" type="url" defaultValue={content?.coverImage} placeholder="https://…" className="input" />
           </div>
         </div>
         <FormMessage state={state} />
-        {canEdit && <SubmitButton className="btn-primary w-full">{content ? "Save changes" : "Create"}</SubmitButton>}
+        {canEdit && <SubmitButton className="btn-primary w-full">{content ? "Simpan perubahan" : "Cipta"}</SubmitButton>}
       </aside>
       </fieldset>
     </form>

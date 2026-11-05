@@ -18,12 +18,12 @@ function Divider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export const metadata: Metadata = { title: "Admin sign in" };
+export const metadata: Metadata = { title: "Log masuk pentadbir" };
 
 const ERRORS: Record<string, string> = {
-  not_allowed: "This account does not have access. Ask the PERISAI super admin to add you.",
-  google_failed: "Google sign-in failed. Please try again.",
-  google_disabled: "Google sign-in is not configured yet.",
+  not_allowed: "Akaun ini tiada akses. Minta pentadbir utama PERISAI menambah anda.",
+  google_failed: "Log masuk dengan Google gagal. Sila cuba lagi.",
+  google_disabled: "Log masuk dengan Google belum dikonfigurasi.",
 };
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
@@ -40,8 +40,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <span className="mx-auto grid size-16 place-items-center rounded-2xl bg-white shadow-lg shadow-brand-600/30">
             <LogoMark className="size-10" />
           </span>
-          <h1 className="mt-4 font-display text-2xl font-bold text-white">Admin sign in</h1>
-          <p className="mt-1 text-sm text-slate-400">Manage members and website content</p>
+          <h1 className="mt-4 font-display text-2xl font-bold text-white">Log masuk pentadbir</h1>
+          <p className="mt-1 text-sm text-slate-400">Urus ahli dan kandungan laman web</p>
         </div>
 
         <div className="space-y-4 rounded-2xl bg-white p-6 shadow-2xl">
@@ -59,18 +59,18 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
                 <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z" />
                 <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z" />
               </svg>
-              Sign in with Google
+              Log masuk dengan Google
             </a>
           )}
 
-          {google && <Divider>or sign in with email and password</Divider>}
+          {google && <Divider>atau log masuk dengan e-mel dan kata laluan</Divider>}
 
           <LoginForm />
 
           {email && (
             <details className="pt-1">
               <summary className="cursor-pointer list-none text-center text-xs text-slate-400 hover:text-slate-600">
-                Forgot password? Email me a sign-in code
+                Lupa kata laluan? Hantar kod log masuk ke e-mel saya
               </summary>
               <div className="mt-3">
                 <EmailLogin />
@@ -81,7 +81,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
 
         <p className="mt-6 text-center text-sm text-slate-500">
           <Link href="/" className="hover:text-slate-300">
-            ← Back to website
+            ← Kembali ke laman web
           </Link>
         </p>
       </div>

@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { SubmitButton } from "@/components/SubmitButton";
 import { requestLoginCode, verifyLoginCodeAction, type CodeState } from "../actions";
 
-/** Two-step email sign-in: email → 6-digit code. "Start over" remounts it with fresh state. */
+/** Two-step email sign-in: email → Kod 6 digit. "Start over" remounts it with fresh state. */
 export function EmailLogin() {
   const [round, setRound] = useState(0);
   return <EmailLoginSteps key={round} onRestart={() => setRound((r) => r + 1)} />;
@@ -19,7 +19,7 @@ function EmailLoginSteps({ onRestart }: { onRestart: () => void }) {
       <form action={sendAction} className="space-y-3">
         <div>
           <label htmlFor="login-email" className="label">
-            Email address
+            Alamat e-mel
           </label>
           <input
             id="login-email"
@@ -27,14 +27,14 @@ function EmailLoginSteps({ onRestart }: { onRestart: () => void }) {
             type="email"
             required
             defaultValue={sendState?.email}
-            placeholder="name@uum.edu.my"
+            placeholder="nama@uum.edu.my"
             autoComplete="email"
             className="input"
           />
         </div>
         <Message state={sendState} />
-        <SubmitButton className="btn-primary w-full" pendingText="Sending code…">
-          Email me a sign-in code
+        <SubmitButton className="btn-primary w-full" pendingText="Menghantar kod…">
+          Hantar kod log masuk ke e-mel saya
         </SubmitButton>
       </form>
     );
@@ -46,7 +46,7 @@ function EmailLoginSteps({ onRestart }: { onRestart: () => void }) {
       <input type="hidden" name="email" value={sendState.email} />
       <div>
         <label htmlFor="login-code" className="label">
-          6-digit code
+          Kod 6 digit
         </label>
         <input
           id="login-code"
@@ -62,11 +62,11 @@ function EmailLoginSteps({ onRestart }: { onRestart: () => void }) {
         />
       </div>
       <Message state={verifyState} />
-      <SubmitButton className="btn-primary w-full" pendingText="Checking…">
-        Sign in
+      <SubmitButton className="btn-primary w-full" pendingText="Menyemak…">
+        Log masuk
       </SubmitButton>
       <button type="button" onClick={onRestart} className="w-full text-center text-sm text-slate-500 hover:text-slate-800">
-        Use a different email or resend code
+        Guna e-mel lain atau hantar semula kod
       </button>
     </form>
   );

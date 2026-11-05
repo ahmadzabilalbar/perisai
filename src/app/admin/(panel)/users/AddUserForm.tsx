@@ -9,18 +9,18 @@ export function AddUserForm() {
   const [state, action] = useActionState(addUser, undefined);
   return (
     <form action={action} className="card space-y-4 p-5 sm:p-6">
-      <h2 className="font-semibold text-slate-900">Add user</h2>
+      <h2 className="font-semibold text-slate-900">Tambah pengguna</h2>
       <div className="grid gap-4 sm:grid-cols-3">
         <div>
-          <label className="label" htmlFor="u-email">Email *</label>
-          <input id="u-email" name="email" type="email" required placeholder="name@uum.edu.my" className="input" />
+          <label className="label" htmlFor="u-email">E-mel *</label>
+          <input id="u-email" name="email" type="email" required placeholder="nama@uum.edu.my" className="input" />
         </div>
         <div>
-          <label className="label" htmlFor="u-name">Name</label>
+          <label className="label" htmlFor="u-name">Nama</label>
           <input id="u-name" name="name" className="input" />
         </div>
         <div>
-          <label className="label" htmlFor="u-password">Password *</label>
+          <label className="label" htmlFor="u-password">Kata laluan *</label>
           <input
             id="u-password"
             name="password"
@@ -28,7 +28,7 @@ export function AddUserForm() {
             required
             minLength={8}
             autoComplete="new-password"
-            placeholder="Min 8 characters"
+            placeholder="Min. 8 aksara"
             className="input"
           />
         </div>
@@ -36,9 +36,9 @@ export function AddUserForm() {
       <FormMessage state={state} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-slate-500">
-          They sign in with this email and password, and start with view-only access until you upgrade them.
+          Mereka log masuk dengan e-mel dan kata laluan ini, dan bermula dengan akses lihat sahaja sehingga anda menaik taraf mereka.
         </p>
-        <SubmitButton pendingText="Adding…">Add user</SubmitButton>
+        <SubmitButton pendingText="Menambah…">Tambah pengguna</SubmitButton>
       </div>
     </form>
   );

@@ -4,7 +4,7 @@ import { LogoMark } from "@/components/Logo";
 import { Markdown } from "@/components/Markdown";
 import { PostCard } from "@/components/PostCard";
 import { IconArrowRight, IconCheck } from "@/components/Icons";
-import { getPublishedPosts, getSettings } from "@/lib/data";
+import { MEMBERSHIP_LABEL, getPublishedPosts, getSettings, type MembershipType } from "@/lib/data";
 
 export default async function HomePage() {
   const [s, posts] = await Promise.all([getSettings(), getPublishedPosts()]);
@@ -29,11 +29,11 @@ export default async function HomePage() {
             <div className="mt-8 flex flex-wrap gap-3">
               {joinEnabled && (
                 <Link href="/join" className="btn-primary !px-5 !py-3">
-                  Join now <IconArrowRight className="size-4" />
+                  Sertai sekarang <IconArrowRight className="size-4" />
                 </Link>
               )}
               <a href="#membership" className="btn-secondary !px-5 !py-3">
-                Membership fees
+                Yuran keahlian
               </a>
             </div>
           </div>
@@ -50,18 +50,18 @@ export default async function HomePage() {
               <div className="absolute inset-6 rotate-3 rounded-3xl bg-gradient-to-br from-brand-500 to-violet-500 opacity-90" />
               <div className="absolute inset-6 -rotate-2 rounded-3xl bg-white/85 p-8 shadow-xl ring-1 ring-slate-900/5 backdrop-blur">
                 <div className="flex items-start justify-between">
-                  <div className="font-display text-sm font-semibold text-brand-700">Member card</div>
+                  <div className="font-display text-sm font-semibold text-brand-700">Kad ahli</div>
                   <LogoMark className="size-14" />
                 </div>
                 <div className="mt-2 font-display text-3xl font-bold tracking-[0.12em] text-slate-900">{s.siteName}</div>
                 <div className="mt-2 text-slate-500">{s.tagline}</div>
                 <div className="absolute inset-x-8 bottom-8 flex items-end justify-between">
                   <div>
-                    <div className="text-xs text-slate-400">MEMBER NO.</div>
+                    <div className="text-xs text-slate-400">NO. AHLI</div>
                     <div className="font-mono text-lg tracking-widest text-slate-700">M0001</div>
                   </div>
                   <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
-                    Active
+                    Aktif
                   </span>
                 </div>
               </div>
@@ -84,22 +84,22 @@ export default async function HomePage() {
       <section id="membership" className="scroll-mt-20 bg-slate-50 py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="font-display text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Membership</h2>
+            <h2 className="font-display text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Keahlian</h2>
             <p className="mt-3 text-slate-600">{s.feeNotes}</p>
           </div>
           <div className="mx-auto mt-12 grid max-w-4xl gap-6 md:grid-cols-2">
             <Plan
               name="Annual"
               price={`${s.currency} ${s.annualFee}`}
-              period="/ year"
-              features={["Full member benefits", "Valid for 12 months", "Renew anytime"]}
+              period="setahun"
+              features={["Semua manfaat ahli", "Sah selama 12 bulan", "Boleh diperbaharui bila-bila masa"]}
               joinEnabled={joinEnabled}
             />
             <Plan
               name="Lifetime"
               price={`${s.currency} ${s.lifetimeFee}`}
-              period="one-time"
-              features={["All annual benefits", "Never expires", "One-time payment"]}
+              period="sekali bayar"
+              features={["Semua manfaat ahli tahunan", "Tiada tarikh tamat", "Bayaran sekali sahaja"]}
               highlight
               joinEnabled={joinEnabled}
             />
@@ -111,9 +111,9 @@ export default async function HomePage() {
       {posts.length > 0 && (
         <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
           <div className="flex items-end justify-between gap-4">
-            <h2 className="font-display text-3xl font-bold tracking-tight text-slate-900">Latest news</h2>
+            <h2 className="font-display text-3xl font-bold tracking-tight text-slate-900">Berita terkini</h2>
             <Link href="/news" className="text-sm font-semibold text-brand-600 hover:text-brand-700">
-              View all →
+              Lihat semua →
             </Link>
           </div>
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -135,7 +135,7 @@ function Plan({
   highlight,
   joinEnabled,
 }: {
-  name: string;
+  name: MembershipType;
   price: string;
   period: string;
   features: string[];
@@ -150,11 +150,11 @@ function Plan({
     >
       {highlight && (
         <span className="absolute top-6 right-6 rounded-full bg-brand-500 px-3 py-1 text-xs font-semibold">
-          Best value
+          Paling berbaloi
         </span>
       )}
       <h3 className={`font-display text-lg font-semibold ${highlight ? "text-brand-300" : "text-brand-700"}`}>
-        {name}
+        {MEMBERSHIP_LABEL[name]}
       </h3>
       <p className="mt-4 flex items-baseline gap-2">
         <span className="font-display text-4xl font-bold tracking-tight">{price}</span>
@@ -173,7 +173,7 @@ function Plan({
           href={`/join?plan=${name}`}
           className={`mt-8 w-full ${highlight ? "btn bg-white text-slate-900 hover:bg-slate-100" : "btn-primary"}`}
         >
-          Choose {name}
+          Pilih {MEMBERSHIP_LABEL[name]}
         </Link>
       )}
     </div>

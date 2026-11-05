@@ -9,6 +9,11 @@ import { JWT } from "google-auth-library";
 
 export type Row = Record<string, string>;
 
+/**
+ * Column layout of each tab. Columns are read and written by position, so after changing a list
+ * here run `node --env-file=.env.local scripts/migrate-sheet.mjs` to move existing data to match.
+ * Members deliberately has no IC number column: IC numbers are never collected (PDPA).
+ */
 export const TABLES = {
   Members: [
     "id",
@@ -17,7 +22,6 @@ export const TABLES = {
     "name",
     "email",
     "phone",
-    "icNo",
     "address",
     "membershipType", // Annual | Lifetime
     "feeStatus", // Paid | Unpaid | Pending
@@ -26,6 +30,19 @@ export const TABLES = {
     "lastPaymentAmount",
     "joinDate",
     "notes",
+    "createdAt",
+    "updatedAt",
+    "editToken", // secret for the member's private update link (/kemaskini/<token>); blank = no link
+  ],
+  // A member's children with special needs (one row per child, linked by memberId)
+  Children: [
+    "id",
+    "memberId",
+    "name",
+    "dob", // YYYY-MM-DD
+    "gender", // Lelaki | Perempuan
+    "okuType", // one or more of OKU_TYPES, "; "-separated
+    "okuDetail", // optional specific conditions from OKU_DETAILS, "; "-separated
     "createdAt",
     "updatedAt",
   ],
@@ -170,15 +187,29 @@ async function setupSchema(): Promise<SheetIds> {
 
 // ---- CRUD ----
 
-export async function readAll(table: TableName): Promise<Row[]> {
+export type NumberedRow = { rowNumber: number; row: Row };
+
+/**
+ * Every non-blank record with its real 1-based sheet row number.
+ * Blank rows (e.g. a row cleared by hand in the sheet) are skipped but still counted,
+ * so row numbers always point at the right record.
+ */
+export async function readRows(table: TableName): Promise<NumberedRow[]> {
   await ensureSchema();
   const data = await api<{ values?: string[][] }>(
     `/values/${encodeURIComponent(`${table}!A2:${lastCol(table)}`)}`,
   );
   const headers = TABLES[table];
-  return (data.values ?? [])
-    .filter((r) => r.some((c) => c !== ""))
-    .map((r) => Object.fromEntries(headers.map((h, i) => [h, r[i] ?? ""])));
+  const out: NumberedRow[] = [];
+  (data.values ?? []).forEach((r, i) => {
+    if (!r.some((c) => c !== "")) return;
+    out.push({ rowNumber: i + 2, row: Object.fromEntries(headers.map((h, j) => [h, r[j] ?? ""])) });
+  });
+  return out;
+}
+
+export async function readAll(table: TableName): Promise<Row[]> {
+  return (await readRows(table)).map((r) => r.row);
 }
 
 function toValues(table: TableName, row: Row) {
@@ -186,64 +217,87 @@ function toValues(table: TableName, row: Row) {
 }
 
 export async function insert(table: TableName, row: Row) {
-  await ensureSchema();
-  await api(
-    `/values/${encodeURIComponent(`${table}!A1`)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
-    { method: "POST", body: JSON.stringify({ values: [toValues(table, row)] }) },
-  );
+  await appendRows(table, [row]);
   return row;
 }
 
-/** Finds the 1-based sheet row number for a record whose `key` column equals `value`. */
-async function findRowNumber(table: TableName, key: string, value: string) {
-  const rows = await readAll(table);
-  const idx = rows.findIndex((r) => r[key] === value);
-  return idx === -1 ? null : { rowNumber: idx + 2, row: rows[idx] };
-}
-
-export async function update(table: TableName, id: string, patch: Row, key = "id") {
-  const found = await findRowNumber(table, key, id);
-  if (!found) throw new Error(`${table} record ${id} not found`);
-  const merged = { ...found.row, ...patch };
-  await api(
-    `/values/${encodeURIComponent(`${table}!A${found.rowNumber}:${lastCol(table)}${found.rowNumber}`)}?valueInputOption=RAW`,
-    { method: "PUT", body: JSON.stringify({ values: [toValues(table, merged)] }) },
-  );
-  return merged;
-}
-
-/** Overwrites all data rows of a table in two requests (clear + write). */
-export async function replaceAll(table: TableName, rows: Row[]) {
-  await ensureSchema();
-  await api(`/values/${encodeURIComponent(`${table}!A2:${lastCol(table)}`)}:clear`, { method: "POST" });
+/** Appends records after the last row of the table (one request). */
+export async function appendRows(table: TableName, rows: Row[]) {
   if (!rows.length) return;
+  await ensureSchema();
   await api(
-    `/values/${encodeURIComponent(`${table}!A2:${lastCol(table)}${rows.length + 1}`)}?valueInputOption=RAW`,
-    { method: "PUT", body: JSON.stringify({ values: rows.map((r) => toValues(table, r)) }) },
+    `/values/${encodeURIComponent(`${table}!A1`)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
+    { method: "POST", body: JSON.stringify({ values: rows.map((r) => toValues(table, r)) }) },
   );
 }
 
-export async function remove(table: TableName, id: string, key = "id") {
+/** Overwrites the given sheet rows in place (one request). Row numbers must come from readRows(). */
+export async function writeRows(table: TableName, rows: NumberedRow[]) {
+  if (!rows.length) return;
+  await ensureSchema();
+  await api(`/values:batchUpdate`, {
+    method: "POST",
+    body: JSON.stringify({
+      valueInputOption: "RAW",
+      data: rows.map(({ rowNumber, row }) => ({
+        range: `${table}!A${rowNumber}:${lastCol(table)}${rowNumber}`,
+        values: [toValues(table, row)],
+      })),
+    }),
+  });
+}
+
+/** Deletes the given sheet rows (one request). Row numbers must come from readRows(). */
+export async function deleteRows(table: TableName, rowNumbers: number[]) {
+  if (!rowNumbers.length) return;
   const ids = await ensureSchema();
-  const found = await findRowNumber(table, key, id);
-  if (!found) return;
+  // Bottom-up, so each deletion doesn't shift the rows still to be deleted
+  const sorted = [...new Set(rowNumbers)].sort((a, b) => b - a);
   await api(":batchUpdate", {
     method: "POST",
     body: JSON.stringify({
-      requests: [
-        {
-          deleteDimension: {
-            range: {
-              sheetId: ids[table],
-              dimension: "ROWS",
-              startIndex: found.rowNumber - 1,
-              endIndex: found.rowNumber,
-            },
-          },
+      requests: sorted.map((n) => ({
+        deleteDimension: {
+          range: { sheetId: ids[table], dimension: "ROWS", startIndex: n - 1, endIndex: n },
         },
-      ],
+      })),
     }),
   });
+}
+
+/** Finds the record whose `key` column equals `value`, with its real sheet row number. */
+async function findRow(table: TableName, key: string, value: string) {
+  return (await readRows(table)).find((r) => r.row[key] === value) ?? null;
+}
+
+export async function update(table: TableName, id: string, patch: Row, key = "id") {
+  const found = await findRow(table, key, id);
+  if (!found) throw new Error(`${table} record ${id} not found`);
+  const merged = { ...found.row, ...patch };
+  await writeRows(table, [{ rowNumber: found.rowNumber, row: merged }]);
+  return merged;
+}
+
+/**
+ * Overwrites all data rows of a table. Writes the new rows first and only then clears
+ * whatever is left below them, so a failure never leaves the table empty.
+ */
+export async function replaceAll(table: TableName, rows: Row[]) {
+  await ensureSchema();
+  if (rows.length) {
+    await api(
+      `/values/${encodeURIComponent(`${table}!A2:${lastCol(table)}${rows.length + 1}`)}?valueInputOption=RAW`,
+      { method: "PUT", body: JSON.stringify({ values: rows.map((r) => toValues(table, r)) }) },
+    );
+  }
+  await api(`/values/${encodeURIComponent(`${table}!A${rows.length + 2}:${lastCol(table)}`)}:clear`, {
+    method: "POST",
+  });
+}
+
+export async function remove(table: TableName, id: string, key = "id") {
+  const found = await findRow(table, key, id);
+  if (found) await deleteRows(table, [found.rowNumber]);
 }
 
 export function newId() {

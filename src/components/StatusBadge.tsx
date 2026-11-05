@@ -1,4 +1,4 @@
-import type { MemberState } from "@/lib/format";
+import { STATE_LABEL, type MemberState } from "@/lib/format";
 
 const STYLES: Record<MemberState, string> = {
   Active: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
@@ -24,7 +24,7 @@ export function StatusBadge({ state }: { state: MemberState }) {
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${STYLES[state]}`}
     >
       <span className={`size-1.5 rounded-full ${DOT[state]}`} />
-      {state}
+      {STATE_LABEL[state]}
     </span>
   );
 }

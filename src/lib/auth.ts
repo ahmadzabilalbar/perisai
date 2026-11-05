@@ -109,7 +109,7 @@ export async function requireAdmin() {
 /** Roles that may change data. Use in every server action that writes. */
 export async function requireEditor() {
   const s = await requireAdmin();
-  if (!canEdit(s.role)) throw new Error("View-only access: you cannot make changes.");
+  if (!canEdit(s.role)) throw new Error("Akses lihat sahaja: anda tidak boleh membuat perubahan.");
   return s;
 }
 

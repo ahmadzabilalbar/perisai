@@ -4,7 +4,7 @@ import { EditOnly } from "@/components/AdminRole";
 import { IconExternal, IconPlus } from "@/components/Icons";
 import { formatDate, getAllContent } from "@/lib/data";
 
-export const metadata: Metadata = { title: "Pages & News" };
+export const metadata: Metadata = { title: "Halaman & Berita" };
 
 export default async function ContentPage() {
   const all = await getAllContent();
@@ -15,23 +15,23 @@ export default async function ContentPage() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-bold text-slate-900">Pages & News</h1>
-          <p className="text-sm text-slate-500">Manage the content of your public website</p>
+          <h1 className="font-display text-2xl font-bold text-slate-900">Halaman & Berita</h1>
+          <p className="text-sm text-slate-500">Urus kandungan laman web awam anda</p>
         </div>
         <EditOnly>
         <div className="flex gap-2">
           <Link href="/admin/content/new?type=page" className="btn-secondary">
-            <IconPlus className="size-4" /> New page
+            <IconPlus className="size-4" /> Halaman baharu
           </Link>
           <Link href="/admin/content/new?type=post" className="btn-primary">
-            <IconPlus className="size-4" /> New post
+            <IconPlus className="size-4" /> Berita baharu
           </Link>
         </div>
         </EditOnly>
       </div>
 
-      <ContentList title="Pages" items={pages} hrefPrefix="/" empty="No pages yet. Create an About or Contact page." />
-      <ContentList title="News posts" items={posts} hrefPrefix="/news/" empty="No news posts yet." />
+      <ContentList title="Halaman" items={pages} hrefPrefix="/" empty="Belum ada halaman. Cipta halaman Tentang Kami atau Hubungi Kami." />
+      <ContentList title="Berita" items={posts} hrefPrefix="/news/" empty="Belum ada berita." />
     </div>
   );
 }
@@ -60,8 +60,8 @@ function ContentList({
                 <p className="truncate font-medium text-slate-900">{c.title}</p>
                 <p className="truncate text-xs text-slate-500">
                   {hrefPrefix}
-                  {c.slug} · Updated {formatDate(c.updatedAt)}
-                  {c.type === "page" && c.showInNav ? " · In menu" : ""}
+                  {c.slug} · Dikemas kini {formatDate(c.updatedAt)}
+                  {c.type === "page" && c.showInNav ? " · Dalam menu" : ""}
                 </p>
               </Link>
               <span
@@ -69,14 +69,14 @@ function ContentList({
                   c.published ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"
                 }`}
               >
-                {c.published ? "Published" : "Draft"}
+                {c.published ? "Diterbitkan" : "Draf"}
               </span>
               {c.published && (
                 <a
                   href={`${hrefPrefix}${c.slug}`}
                   target="_blank"
                   className="text-slate-400 hover:text-slate-700"
-                  aria-label="View on site"
+                  aria-label="Lihat di laman web"
                 >
                   <IconExternal className="size-4" />
                 </a>

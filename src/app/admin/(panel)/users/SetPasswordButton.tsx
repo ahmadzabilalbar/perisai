@@ -6,7 +6,7 @@ import { SubmitButton } from "@/components/SubmitButton";
 import { setUserPassword } from "../../actions";
 
 /** Inline "Set password" control for one user row. */
-export function SetPasswordButton({ email, label = "Set password" }: { email: string; label?: string }) {
+export function SetPasswordButton({ email, label = "Tetapkan kata laluan" }: { email: string; label?: string }) {
   const [open, setOpen] = useState(false);
   const [state, action] = useActionState(setUserPassword, undefined);
 
@@ -31,14 +31,14 @@ export function SetPasswordButton({ email, label = "Set password" }: { email: st
         minLength={8}
         autoFocus
         autoComplete="new-password"
-        placeholder="New password (min 8)"
+        placeholder="Kata laluan baharu (min. 8)"
         className="input !w-52 !py-1.5"
       />
-      <SubmitButton className="btn-primary !px-3 !py-1.5 !text-xs" pendingText="Saving…">
-        Save
+      <SubmitButton className="btn-primary !px-3 !py-1.5 !text-xs" pendingText="Menyimpan…">
+        Simpan
       </SubmitButton>
       <button type="button" onClick={() => setOpen(false)} className="btn-ghost !px-3 !py-1.5 !text-xs">
-        Cancel
+        Batal
       </button>
       {state?.error && (
         <div className="basis-full">

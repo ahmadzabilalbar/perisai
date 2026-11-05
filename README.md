@@ -34,7 +34,8 @@ The app **creates the tabs and header rows automatically** on first use:
 
 | Tab | Purpose |
 | --- | --- |
-| `Members` | One row per member |
+| `Members` | One row per member (no IC number column: IC numbers are never collected, per PDPA) |
+| `Children` | One row per child with special needs, linked to `Members` by `memberId`: OKU types (`okuType`) and optional specific conditions (`okuDetail`), both `; `-separated |
 | `Payments` | Payment log (one row per payment) |
 | `Content` | Pages and news posts |
 | `Settings` | Key/value website settings |
@@ -42,6 +43,26 @@ The app **creates the tabs and header rows automatically** on first use:
 | `LoginCodes` | Temporary email sign-in codes (hashed; removed after use) |
 
 You can also view or edit data directly in the sheet. Changes made in the sheet appear on the site within about 5 minutes, or immediately after any admin save.
+
+Columns are read by position, following `TABLES` in `src/lib/sheets.ts`. Don't reorder, insert or delete columns in the sheet by hand. To change the layout, edit `TABLES`, then run:
+
+```bash
+node --env-file=.env.local scripts/migrate-sheet.mjs          # dry run: shows what would change
+node --env-file=.env.local scripts/migrate-sheet.mjs --apply  # moves existing data to match
+```
+
+The migration matches columns by header name, so data follows its column. Columns removed from `TABLES` are dropped (the dry run says how many rows hold a value). Deploy the new code at the same time: an older deployment still writes the old layout.
+
+The OKU options (`OKU_TYPES`, `OKU_DETAILS` in `src/lib/format.ts`) follow JKM's official registration categories. Specific conditions are stored by name, so renaming an option means records saved under the old name no longer match it.
+
+Test data: `scripts/dummy-members.mjs` and `scripts/dummy-news.mjs` add and remove `[UJIAN]` records (run either without arguments for usage).
+
+To start fresh after testing on the live site, `scripts/reset-data.mjs` deletes **every** row in `Members`, `Children`, `Payments`, `LoginCodes` and `Content`, including records testers typed in. `Settings` and `Users` are kept. Add `--keep-content` to keep pages and news. It's a dry run unless you pass `--apply`. To undo, use File → Version history in the sheet.
+
+```bash
+node --env-file=.env.local scripts/reset-data.mjs          # shows what would be deleted
+node --env-file=.env.local scripts/reset-data.mjs --apply  # deletes it
+```
 
 ## Setup
 

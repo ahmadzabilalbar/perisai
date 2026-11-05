@@ -36,7 +36,7 @@ export function SiteHeader({
       }`}
     >
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link href="/" aria-label={`${siteName} home`}>
+        <Link href="/" aria-label={`Laman utama ${siteName}`}>
           <Logo name={siteName} />
         </Link>
 
@@ -53,8 +53,8 @@ export function SiteHeader({
             </Link>
           ))}
           {joinEnabled && (
-            <Link href="/join" className="btn-primary ml-3 !py-2">
-              Become a member
+            <Link href="/join" className="btn-primary ml-3 shrink-0 whitespace-nowrap !py-2" title="Daftar sebagai ahli">
+              Daftar
             </Link>
           )}
         </div>
@@ -62,7 +62,7 @@ export function SiteHeader({
         <button
           className="btn-ghost -mr-2 !p-2 md:hidden"
           onClick={() => setOpen((o) => !o)}
-          aria-label={open ? "Close menu" : "Open menu"}
+          aria-label={open ? "Tutup menu" : "Buka menu"}
           aria-expanded={open}
         >
           {open ? <IconX className="size-6" /> : <IconMenu className="size-6" />}
@@ -85,7 +85,7 @@ export function SiteHeader({
             ))}
             {joinEnabled && (
               <Link href="/join" className="btn-primary mt-2">
-                Become a member
+                Daftar sebagai ahli
               </Link>
             )}
           </div>
