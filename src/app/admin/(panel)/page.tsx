@@ -12,8 +12,10 @@ import {
   MEMBERSHIP_LABEL,
   type MembershipType,
 } from "@/lib/data";
+import { requireStaff } from "@/lib/auth";
 
 export default async function Dashboard() {
+  await requireStaff();
   const [members, payments, s] = await Promise.all([getMembers(), getPayments(), getSettings()]);
   const withState = members.map((m) => ({ ...m, state: memberState(m) }));
   const count = (st: string) => withState.filter((m) => m.state === st).length;

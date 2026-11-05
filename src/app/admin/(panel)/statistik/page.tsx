@@ -14,6 +14,7 @@ import {
   type MemberState,
 } from "@/lib/data";
 import { AGE_GROUPS, childrenHref, matches, toChildRows, TYPE_COUNTS, type ChildFilters } from "./children-filter";
+import { requireStaff } from "@/lib/auth";
 
 /** `note` sits beside the label; `detail` is a second line under it. */
 type Item = { label: string; value: number; note?: string; detail?: string; href?: string };
@@ -24,6 +25,7 @@ const printedAt = () =>
 const pct = (n: number, total: number) => (total ? Math.round((n / total) * 100) : 0);
 
 export default async function Statistik() {
+  await requireStaff();
   const [members, allChildren] = await Promise.all([getMembers(), getChildren()]);
   const children = toChildRows(allChildren, new Set(members.map((m) => m.id)));
   const total = children.length;

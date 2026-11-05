@@ -20,11 +20,17 @@ function secret() {
  * superadmin – emails in SUPERADMIN_EMAILS; everything incl. managing users
  * admin      – can view and update (Users sheet)
  * viewer     – can view every admin page but cannot update anything
+ * editor     – can only see and manage Halaman & Berita (pages and news); no member data at all
  */
-export type Role = "superadmin" | "admin" | "viewer";
+export type Role = "superadmin" | "admin" | "viewer" | "editor";
 export type Session = { role: Role; email: string };
 
+/** May change member, payment and settings data. */
 export const canEdit = (role: Role) => role === "superadmin" || role === "admin";
+/** May create, edit and delete pages and news (and upload their cover images). */
+export const canEditContent = (role: Role) => canEdit(role) || role === "editor";
+/** May open admin pages other than Halaman & Berita. Editors are kept away from member data. */
+export const canViewAll = (role: Role) => role !== "editor";
 
 /** Gmail accounts allowed to sign in with Google as super admin (comma-separated env overrides the default). */
 export function superAdminEmails() {
@@ -116,10 +122,17 @@ export async function isAdmin() {
   return (await getSession()) !== null;
 }
 
-/** Any signed-in role (incl. viewer). Use for pages that only display data. */
+/** Any signed-in role (incl. viewer and editor). Only for Halaman & Berita pages; use requireStaff elsewhere. */
 export async function requireAdmin() {
   const s = await getSession();
   if (!s) redirect("/admin/login");
+  return s;
+}
+
+/** Every admin page outside Halaman & Berita (members, statistik, settings…): editors go to the content list. */
+export async function requireStaff() {
+  const s = await requireAdmin();
+  if (!canViewAll(s.role)) redirect("/admin/content");
   return s;
 }
 
@@ -134,6 +147,20 @@ export async function requireEditor() {
 export async function requireEditorPage() {
   const s = await requireAdmin();
   if (!canEdit(s.role)) redirect("/admin");
+  return s;
+}
+
+/** Server actions that change pages or news. */
+export async function requireContentEditor() {
+  const s = await requireAdmin();
+  if (!canEditContent(s.role)) throw new Error("Akses lihat sahaja: anda tidak boleh membuat perubahan.");
+  return s;
+}
+
+/** Pages for writing pages or news (e.g. "New page"): viewers go back to the content list. */
+export async function requireContentEditorPage() {
+  const s = await requireAdmin();
+  if (!canEditContent(s.role)) redirect("/admin/content");
   return s;
 }
 

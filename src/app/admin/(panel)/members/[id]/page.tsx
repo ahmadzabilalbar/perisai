@@ -24,15 +24,18 @@ import { deleteMember, deletePayment } from "../../../actions";
 import { MemberForm } from "../MemberForm";
 import { PaymentForm } from "./PaymentForm";
 import { EditLinkCard } from "./EditLinkCard";
+import { requireStaff } from "@/lib/auth";
 
 type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  await requireStaff(); // the title is the member's name
   const m = await getMember((await params).id);
   return { title: m?.name ?? "Ahli" };
 }
 
 export default async function MemberPage({ params }: Props) {
+  await requireStaff();
   const { id } = await params;
   const [m, payments, s, childList] = await Promise.all([
     getMember(id),

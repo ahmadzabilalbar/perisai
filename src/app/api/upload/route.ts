@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { put } from "@vercel/blob";
-import { canEdit, getSession } from "@/lib/auth";
+import { canEditContent, getSession } from "@/lib/auth";
 
 // The browser crops and resizes every cover to 1200×675 before sending (see CoverImageInput),
 // which comes out around 100–300 KB. Anything over this cap didn't go through that step.
@@ -18,11 +18,11 @@ function imageType(b: Uint8Array): { mime: string; ext: string } | null {
 
 const fail = (error: string, status: number) => NextResponse.json({ error }, { status });
 
-/** Uploads a cover image to Vercel Blob and returns its public URL. Admins and super admins only. */
+/** Uploads a cover image to Vercel Blob and returns its public URL. Admins, editors and super admins only. */
 export async function POST(req: Request) {
   const session = await getSession();
   if (!session) return fail("Sila log masuk semula.", 401);
-  if (!canEdit(session.role)) return fail("Akses lihat sahaja: anda tidak boleh memuat naik gambar.", 403);
+  if (!canEditContent(session.role)) return fail("Akses lihat sahaja: anda tidak boleh memuat naik gambar.", 403);
   if (!process.env.BLOB_READ_WRITE_TOKEN && !process.env.BLOB_STORE_ID) {
     return fail("Storan gambar belum disediakan (Vercel Blob). Tampal URL gambar sebagai ganti.", 503);
   }

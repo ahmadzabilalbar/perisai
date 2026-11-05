@@ -179,6 +179,17 @@ export function formatDate(date: string) {
 }
 
 /** Markdown image syntax: ![alt](url) or reference-style ![alt][ref]. News bodies may not contain images. */
+/** URL slug from a title (also used by the content form to preview the URL). */
+export function slugify(s: string) {
+  return s
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[^\w\s-]/g, "")
+    .trim()
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export const MARKDOWN_IMAGE = /!\[[^\]]*\]\s*[([]/;
 
 /** WhatsApp link with a pre-filled message and no recipient: the sender picks the chat. */
@@ -215,3 +226,14 @@ export function whatsappChatUrl(phone: string, text: string) {
   const n = whatsappNumber(phone);
   return n ? `https://wa.me/${n}?text=${encodeURIComponent(text)}` : "";
 }
+
+// ---------- Admin roles (super admin comes from SUPERADMIN_EMAILS, the rest from the Users sheet) ----------
+
+export type UserRole = "admin" | "viewer" | "editor";
+export const USER_ROLES: UserRole[] = ["admin", "editor", "viewer"];
+export const ROLE_LABEL = { superadmin: "Pentadbir utama", admin: "Pentadbir", editor: "Penyunting", viewer: "Pemerhati" } as const;
+export const ROLE_HINT: Record<UserRole, string> = {
+  admin: "Lihat dan kemas kini semua",
+  editor: "Halaman & berita sahaja",
+  viewer: "Lihat sahaja",
+};

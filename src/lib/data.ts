@@ -1,7 +1,8 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
 import { isSheetsConfigured, readAll } from "./sheets";
-import type { FeeStatus, MembershipType } from "./format";
+import type { FeeStatus, MembershipType, UserRole } from "./format";
+import { USER_ROLES } from "./format";
 
 export * from "./format";
 
@@ -251,7 +252,7 @@ export async function getSettings(): Promise<Settings> {
 
 // ---------- Admin users (Google or email + password sign-in) ----------
 
-export type UserRole = "admin" | "viewer";
+export type { UserRole };
 
 export interface AdminUser {
   email: string;
@@ -278,7 +279,7 @@ export const getUsers = unstable_cache(
         ...(r as unknown as AdminUser),
         email: r.email.trim().toLowerCase(),
         username: (r.username ?? "").trim().toLowerCase(),
-        role: r.role === "admin" ? "admin" : "viewer",
+        role: USER_ROLES.includes(r.role as UserRole) ? (r.role as UserRole) : "viewer",
       }));
   },
   ["users-v2"], // bumped when sessionsValidAfter was added

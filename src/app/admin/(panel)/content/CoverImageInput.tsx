@@ -37,8 +37,19 @@ async function shrink(file: File): Promise<Blob> {
 }
 
 /** Cover image field: upload a photo (stored in Vercel Blob) or paste an image URL. Submits as `coverImage`. */
-export function CoverImageInput({ defaultValue = "" }: { defaultValue?: string }) {
-  const [url, setUrl] = useState(defaultValue);
+export function CoverImageInput({
+  defaultValue = "",
+  onChange,
+}: {
+  defaultValue?: string;
+  /** Called with the new URL (or "") whenever the cover changes */
+  onChange?: (url: string) => void;
+}) {
+  const [url, setUrlState] = useState(defaultValue);
+  const setUrl = (u: string) => {
+    setUrlState(u);
+    onChange?.(u);
+  };
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);

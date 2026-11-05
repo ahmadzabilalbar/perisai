@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { getSettings } from "@/lib/data";
 import { SettingsForm } from "./SettingsForm";
+import { requireStaff } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Tetapan" };
 
 export default async function SettingsPage() {
+  await requireStaff();
   const settings = await getSettings();
   return (
     <div className="mx-auto max-w-3xl space-y-6">

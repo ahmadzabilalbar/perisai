@@ -12,6 +12,7 @@ import {
   TYPE_COUNTS,
   type ChildFilters,
 } from "../children-filter";
+import { requireStaff } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Senarai anak" };
 
@@ -37,6 +38,7 @@ export default async function ChildrenList({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  await requireStaff();
   const filters = cleanFilters(await searchParams);
   const [members, allChildren] = await Promise.all([getMembers(), getChildren()]);
   const parents = new Map(members.map((m) => [m.id, m]));

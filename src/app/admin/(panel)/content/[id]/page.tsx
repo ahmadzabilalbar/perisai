@@ -25,7 +25,7 @@ export default async function EditContentPage({ params }: { params: Promise<{ id
             Sunting {content.type === "post" ? "berita" : "halaman"}
           </h1>
         </div>
-        <EditOnly>
+        <EditOnly content>
           <form action={deleteContent.bind(null, content.id)}>
             <ConfirmButton message={`Padam "${content.title}"?`} className="btn-ghost !text-rose-600">
               Padam

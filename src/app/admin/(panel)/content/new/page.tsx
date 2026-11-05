@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { requireEditorPage } from "@/lib/auth";
+import { requireContentEditorPage } from "@/lib/auth";
 import { ContentForm } from "../ContentForm";
 
 export const metadata: Metadata = { title: "Kandungan baharu" };
 
 export default async function NewContentPage({ searchParams }: { searchParams: Promise<{ type?: string }> }) {
-  await requireEditorPage();
+  await requireContentEditorPage();
   const type = (await searchParams).type === "post" ? "post" : "page";
   return (
     <div className="space-y-6">

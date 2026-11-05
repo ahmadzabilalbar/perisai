@@ -7,6 +7,7 @@ import {
   checkUserPassword,
   createSession,
   destroySession,
+  requireContentEditor,
   requireEditor,
   requireSuperAdmin,
   roleForEmail,
@@ -14,7 +15,7 @@ import {
 } from "@/lib/auth";
 import { isEmailLoginEnabled, sendLoginCode, verifyLoginCode } from "@/lib/login-codes";
 import { parseChildren, saveChildren } from "@/lib/children";
-import { MARKDOWN_IMAGE } from "@/lib/format";
+import { MARKDOWN_IMAGE, slugify, USER_ROLES, type UserRole } from "@/lib/format";
 import { LOCK_MINUTES } from "@/lib/login-guard";
 import { insertMember } from "@/lib/members";
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH, hashPassword } from "@/lib/passwords";
@@ -39,15 +40,6 @@ export type FormState = { error?: string; ok?: string } | undefined;
 
 const str = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
-function slugify(s: string) {
-  return s
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[^\w\s-]/g, "")
-    .trim()
-    .replace(/[\s_-]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
 
 // ---------------- Auth ----------------
 
@@ -290,7 +282,7 @@ export async function generateEditLink(id: string) {
 // ---------------- Content (pages & posts) ----------------
 
 export async function saveContent(_: FormState, fd: FormData): Promise<FormState> {
-  await requireEditor();
+  await requireContentEditor();
   const id = str(fd, "id");
   const title = str(fd, "title");
   if (!title) return { error: "Tajuk diperlukan." };
@@ -336,7 +328,7 @@ export async function saveContent(_: FormState, fd: FormData): Promise<FormState
 }
 
 export async function deleteContent(id: string) {
-  await requireEditor();
+  await requireContentEditor();
   await remove("Content", id);
   updateTag(TAGS.content);
   redirect("/admin/content");
@@ -468,8 +460,10 @@ export async function setUsername(_: FormState, fd: FormData): Promise<FormState
   return { ok: username ? `Nama pengguna ditetapkan: ${username}` : "Nama pengguna dibuang." };
 }
 
-export async function setUserRole(email: string, role: "admin" | "viewer") {
+export async function setUserRole(email: string, fd: FormData) {
   await requireSuperAdmin();
+  const role = str(fd, "role") as UserRole;
+  if (!USER_ROLES.includes(role)) throw new Error("Peranan tidak sah.");
   await update("Users", email, { role }, "email");
   updateTag(TAGS.users);
 }

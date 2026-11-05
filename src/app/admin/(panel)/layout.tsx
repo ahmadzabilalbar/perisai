@@ -1,17 +1,17 @@
 import { redirect } from "next/navigation";
-import { canEdit, getSession } from "@/lib/auth";
+import { canEditContent, canViewAll, getSession } from "@/lib/auth";
+import { ROLE_LABEL } from "@/lib/format";
 import { isSheetsConfigured } from "@/lib/sheets";
 import { AdminRoleProvider } from "@/components/AdminRole";
 import { AdminNav } from "./AdminNav";
 
 export const dynamic = "force-dynamic";
 
-const ROLE_LABEL = { superadmin: "Pentadbir utama", admin: "Pentadbir", viewer: "Pemerhati" } as const;
-
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
   if (!session) redirect("/admin/login");
-  const editable = canEdit(session.role);
+  // Editors only reach Halaman & Berita (other pages redirect them), so for them "editable" means content
+  const editable = canEditContent(session.role);
 
   return (
     <AdminRoleProvider canEdit={editable}>
@@ -20,6 +20,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           user={session.email}
           role={ROLE_LABEL[session.role]}
           isSuperAdmin={session.role === "superadmin"}
+          contentOnly={!canViewAll(session.role)}
         />
         <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-10 print:max-w-none print:p-0">
           {!isSheetsConfigured() && (

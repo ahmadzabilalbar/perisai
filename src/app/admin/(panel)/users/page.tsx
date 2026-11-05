@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { ConfirmButton } from "@/components/ConfirmButton";
 import { requireSuperAdmin, superAdminEmails } from "@/lib/auth";
 import { formatDate, getUsers } from "@/lib/data";
-import { removeUser, setUserRole } from "../../actions";
+import { ROLE_LABEL } from "@/lib/format";
+import { removeUser } from "../../actions";
 import { AddUserForm } from "./AddUserForm";
+import { RoleSelect } from "./RoleSelect";
 import { SetPasswordButton } from "./SetPasswordButton";
 import { SetUsernameButton } from "./SetUsernameButton";
 
@@ -25,7 +27,8 @@ export default async function UsersPage() {
         <p className="text-sm text-slate-500">
           Mereka yang boleh log masuk ke ruang pentadbir, dengan e-mel atau nama pengguna dan kata laluan (atau Google). Pengguna baharu bermula
           dengan akses <strong>lihat sahaja</strong>; naik taraf mereka kepada <strong>Pentadbir</strong> apabila mereka perlu
-          membuat perubahan.
+          membuat perubahan, atau <strong>Penyunting</strong> jika mereka hanya menulis halaman dan berita (tanpa akses kepada
+          data ahli).
         </p>
       </div>
 
@@ -62,12 +65,7 @@ export default async function UsersPage() {
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <RoleBadge role={u.role} />
-                <form action={setUserRole.bind(null, u.email, u.role === "admin" ? "viewer" : "admin")}>
-                  <button className="btn-secondary !px-3 !py-1.5 !text-xs">
-                    {u.role === "admin" ? "Tukar kepada pemerhati" : "Naik taraf kepada pentadbir"}
-                  </button>
-                </form>
+                <RoleSelect email={u.email} role={u.role} />
                 <SetPasswordButton email={u.email} label={u.passwordHash ? "Set semula kata laluan" : "Tetapkan kata laluan"} />
                 <SetUsernameButton email={u.email} username={u.username} />
                 <form action={removeUser.bind(null, u.email)}>
@@ -92,12 +90,10 @@ export default async function UsersPage() {
   );
 }
 
-function RoleBadge({ role }: { role: "superadmin" | "admin" | "viewer" }) {
-  const style = {
-    superadmin: "bg-violet-50 text-violet-700 ring-violet-600/20",
-    admin: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
-    viewer: "bg-sky-50 text-sky-700 ring-sky-600/20",
-  }[role];
-  const label = { superadmin: "Pentadbir utama", admin: "Pentadbir", viewer: "Pemerhati" }[role];
-  return <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${style}`}>{label}</span>;
+function RoleBadge({ role }: { role: "superadmin" }) {
+  return (
+    <span className="rounded-full bg-violet-50 px-2.5 py-0.5 text-xs font-medium text-violet-700 ring-1 ring-violet-600/20 ring-inset">
+      {ROLE_LABEL[role]}
+    </span>
+  );
 }

@@ -26,8 +26,23 @@ const NAV = [
   { href: "/admin/settings", label: "Tetapan", icon: IconCog },
 ];
 
-export function AdminNav({ user, role, isSuperAdmin }: { user: string; role: string; isSuperAdmin: boolean }) {
-  const nav = isSuperAdmin ? [...NAV, { href: "/admin/users", label: "Pengguna & akses", icon: IconShield }] : NAV;
+export function AdminNav({
+  user,
+  role,
+  isSuperAdmin,
+  contentOnly,
+}: {
+  user: string;
+  role: string;
+  isSuperAdmin: boolean;
+  /** Editors: only Halaman & Berita */
+  contentOnly: boolean;
+}) {
+  const nav = contentOnly
+    ? NAV.filter((n) => n.href === "/admin/content")
+    : isSuperAdmin
+      ? [...NAV, { href: "/admin/users", label: "Pengguna & akses", icon: IconShield }]
+      : NAV;
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [pathname]);

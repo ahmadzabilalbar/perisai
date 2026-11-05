@@ -18,7 +18,7 @@ export default async function ContentPage() {
           <h1 className="font-display text-2xl font-bold text-slate-900">Halaman & Berita</h1>
           <p className="text-sm text-slate-500">Urus kandungan laman web awam anda</p>
         </div>
-        <EditOnly>
+        <EditOnly content>
         <div className="flex gap-2">
           <Link href="/admin/content/new?type=page" className="btn-secondary">
             <IconPlus className="size-4" /> Halaman baharu
@@ -56,6 +56,15 @@ function ContentList({
         <ul className="divide-y divide-slate-100">
           {items.map((c) => (
             <li key={c.id} className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50">
+              {c.type === "post" &&
+                (c.coverImage ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={c.coverImage} alt="" className="aspect-[16/9] w-20 shrink-0 rounded-lg object-cover ring-1 ring-slate-200" />
+                ) : (
+                  <div className="grid aspect-[16/9] w-20 shrink-0 place-items-center rounded-lg bg-slate-100 text-[10px] text-slate-400">
+                    Tiada gambar
+                  </div>
+                ))}
               <Link href={`/admin/content/${c.id}`} className="min-w-0 flex-1">
                 <p className="truncate font-medium text-slate-900">{c.title}</p>
                 <p className="truncate text-xs text-slate-500">
