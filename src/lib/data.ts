@@ -46,6 +46,7 @@ export interface Payment {
   amount: string;
   coverage: string;
   note: string;
+  previous: string;
 }
 
 export interface Content {

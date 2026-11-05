@@ -18,7 +18,7 @@ import { MARKDOWN_IMAGE } from "@/lib/format";
 import { LOCK_MINUTES } from "@/lib/login-guard";
 import { insertMember } from "@/lib/members";
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH, hashPassword } from "@/lib/passwords";
-import { insert, newId, nowIso, remove, replaceAll, update } from "@/lib/sheets";
+import { insert, newId, nowIso, readAll, remove, replaceAll, update } from "@/lib/sheets";
 import {
   DEFAULT_SETTINGS,
   TAGS,
@@ -31,6 +31,7 @@ import {
   nextDay,
   normalizeStaffNo,
   today,
+  type Payment,
   type Settings,
 } from "@/lib/data";
 
@@ -138,7 +139,9 @@ export async function saveMember(_: FormState, fd: FormData): Promise<FormState>
     phone: str(fd, "phone"),
     address: str(fd, "address"),
     membershipType,
-    feeStatus: str(fd, "feeStatus") || "Unpaid",
+    // Fee status is never set by hand: "Rekod bayaran" marks it Paid and expiry follows paidUntil.
+    // New members count as paid only if a payment date was entered; edits keep the current status.
+    ...(id ? {} : { feeStatus: str(fd, "lastPaymentDate") ? "Paid" : "Unpaid" }),
     // Annual validity is always calculated (payment date + 1 year) when adding; afterwards "Rekod bayaran" sets it
     paidUntil:
       membershipType === "Lifetime"
@@ -221,6 +224,7 @@ export async function recordPayment(_: FormState, fd: FormData): Promise<FormSta
       amount,
       coverage,
       note: str(fd, "note"),
+      previous: JSON.stringify(Object.fromEntries(FEE_FIELDS.map((k) => [k, m[k]]))),
     });
     await update("Members", m.id, {
       membershipType: type,
@@ -237,23 +241,49 @@ export async function recordPayment(_: FormState, fd: FormData): Promise<FormSta
   return { ok: type === "Annual" ? `Bayaran direkodkan. Sah sehingga ${paidUntil}.` : "Bayaran seumur hidup direkodkan." };
 }
 
+const FEE_FIELDS = ["membershipType", "feeStatus", "paidUntil", "lastPaymentDate", "lastPaymentAmount"] as const;
+
+/**
+ * Deletes a member's most recently recorded payment and puts their membership back as it was before it.
+ * Only the latest one can be deleted, so the snapshot it holds is still the right state to return to.
+ */
+export async function deletePayment(paymentId: string) {
+  await requireEditor();
+  const payments = (await readAll("Payments")) as unknown as Payment[];
+  const p = payments.find((x) => x.id === paymentId);
+  if (!p) return;
+  const own = payments.filter((x) => x.memberId === p.memberId); // sheet order = order recorded
+  if (own.at(-1)?.id !== p.id) throw new Error("Hanya bayaran terakhir yang direkodkan boleh dipadam.");
+
+  let restore: Record<string, string> | null = null;
+  try {
+    const prev = JSON.parse(p.previous || "null");
+    if (prev && typeof prev === "object") restore = Object.fromEntries(FEE_FIELDS.map((k) => [k, String(prev[k] ?? "")]));
+  } catch {}
+  if (!restore) {
+    // Recorded before snapshots existed: rebuild from the payment before it, or unpaid if there is none
+    const before = own.at(-2);
+    restore = before
+      ? {
+          membershipType: before.type === "Lifetime" ? "Lifetime" : "Annual",
+          feeStatus: "Paid",
+          paidUntil: before.type === "Lifetime" ? "" : (before.coverage.split("→")[1]?.trim() ?? ""),
+          lastPaymentDate: before.date,
+          lastPaymentAmount: before.amount,
+        }
+      : { feeStatus: "Unpaid", paidUntil: "", lastPaymentDate: "", lastPaymentAmount: "" };
+  }
+
+  // Member first: if deleting the payment row then fails, trying again restores the same state
+  if (await getMember(p.memberId)) await update("Members", p.memberId, { ...restore, updatedAt: nowIso() });
+  await remove("Payments", p.id);
+  updateTag(TAGS.members);
+}
+
 /** Creates (or replaces, revoking the old one) a member's private link for updating their children. */
 export async function generateEditLink(id: string) {
   await requireEditor();
   await update("Members", id, { editToken: randomBytes(24).toString("base64url"), updatedAt: nowIso() });
-  updateTag(TAGS.members);
-}
-
-export async function setFeeStatus(id: string, feeStatus: "Paid" | "Unpaid" | "Pending") {
-  await requireEditor();
-  const m = await getMember(id);
-  const patch: Record<string, string> = { feeStatus, updatedAt: nowIso() };
-  // Marking an annual member paid without a current validity starts a 1-year period from today
-  if (feeStatus === "Paid" && m?.membershipType === "Annual" && !(m.paidUntil >= today())) {
-    patch.lastPaymentDate = today();
-    patch.paidUntil = addYears(today(), 1);
-  }
-  await update("Members", id, patch);
   updateTag(TAGS.members);
 }
 

@@ -47,7 +47,8 @@ export const TABLES = {
     "createdAt",
     "updatedAt",
   ],
-  Payments: ["id", "memberId", "memberName", "date", "type", "amount", "coverage", "note"],
+  // previous: JSON of the member's fee fields just before this payment, restored if the payment is deleted
+  Payments: ["id", "memberId", "memberName", "date", "type", "amount", "coverage", "note", "previous"],
   Content: [
     "id",
     "type", // page | post

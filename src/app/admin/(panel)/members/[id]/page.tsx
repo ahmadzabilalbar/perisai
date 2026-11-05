@@ -7,7 +7,6 @@ import { EditOnly } from "@/components/EditOnly";
 import { IconChat } from "@/components/Icons";
 import {
   daysUntil,
-  FEE_STATUS_LABEL,
   formatDate,
   getMember,
   getMemberChildren,
@@ -19,7 +18,7 @@ import {
   whatsappShareUrl,
   withoutToken,
 } from "@/lib/data";
-import { deleteMember, setFeeStatus } from "../../../actions";
+import { deleteMember, deletePayment } from "../../../actions";
 import { MemberForm } from "../MemberForm";
 import { PaymentForm } from "./PaymentForm";
 import { EditLinkCard } from "./EditLinkCard";
@@ -42,7 +41,9 @@ export default async function MemberPage({ params }: Props) {
   if (!m) notFound();
 
   const state = memberState(m);
-  const history = payments.filter((p) => p.memberId === m.id).sort((a, b) => b.date.localeCompare(a.date));
+  const own = payments.filter((p) => p.memberId === m.id);
+  const latestId = own.at(-1)?.id; // sheet order = order recorded; only this one can be deleted
+  const history = [...own].sort((a, b) => b.date.localeCompare(a.date));
   const days = daysUntil(m.paidUntil);
 
   // WhatsApp reminder for members whose membership has lapsed or is unpaid
@@ -106,16 +107,6 @@ export default async function MemberPage({ params }: Props) {
             )}
 
             <EditOnly>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {(["Paid", "Unpaid", "Pending"] as const)
-                  .filter((st) => st !== m.feeStatus)
-                  .map((st) => (
-                    <form key={st} action={setFeeStatus.bind(null, m.id, st)}>
-                      <button className="btn-secondary !px-3 !py-1.5 !text-xs">Tandakan {FEE_STATUS_LABEL[st].toLowerCase()}</button>
-                    </form>
-                  ))}
-              </div>
-
               {needsReminder && (
                 <div className="mt-4 border-t border-slate-100 pt-4">
                   <a
@@ -169,6 +160,18 @@ export default async function MemberPage({ params }: Props) {
                       {p.type === "Annual" && p.coverage ? ` · ${p.coverage}` : ""}
                     </p>
                     {p.note && <p className="mt-1 text-xs text-slate-400">{p.note}</p>}
+                    {p.id === latestId && (
+                      <EditOnly>
+                        <form action={deletePayment.bind(null, p.id)} className="mt-2">
+                          <ConfirmButton
+                            message={`Padam bayaran ${formatDate(p.date)} (${s.currency} ${p.amount || "0"})?\n\nStatus dan tarikh sah keahlian akan dikembalikan seperti sebelum bayaran ini direkodkan. Tindakan ini tidak boleh dibatalkan.`}
+                            className="text-xs font-medium text-rose-600 hover:text-rose-700 disabled:opacity-50"
+                          >
+                            Padam bayaran ini
+                          </ConfirmButton>
+                        </form>
+                      </EditOnly>
+                    )}
                   </li>
                 ))}
               </ul>

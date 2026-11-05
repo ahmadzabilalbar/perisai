@@ -5,7 +5,7 @@ import { useCanEdit } from "@/components/AdminRole";
 import { ChildrenFields } from "@/components/ChildrenFields";
 import { FormMessage } from "@/components/FormMessage";
 import { SubmitButton } from "@/components/SubmitButton";
-import { FEE_STATUS_LABEL, MEMBERSHIP_LABEL, addYears } from "@/lib/format";
+import { MEMBERSHIP_LABEL, addYears } from "@/lib/format";
 import type { Child, MemberView } from "@/lib/data";
 import { saveMember } from "../../actions";
 
@@ -86,13 +86,6 @@ export function MemberForm({ member, childList = [] }: { member?: MemberView; ch
               </label>
             ))}
           </div>
-        </Field>
-        <Field label="Status yuran">
-          <select name="feeStatus" defaultValue={member?.feeStatus ?? "Unpaid"} className="input">
-            <option value="Paid">{FEE_STATUS_LABEL.Paid}</option>
-            <option value="Unpaid">{FEE_STATUS_LABEL.Unpaid}</option>
-            <option value="Pending">{FEE_STATUS_LABEL.Pending}</option>
-          </select>
         </Field>
         {type === "Annual" && (
           <Field label="Sah sehingga">
