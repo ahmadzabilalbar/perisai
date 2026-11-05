@@ -15,6 +15,7 @@ import {
 import { isEmailLoginEnabled, sendLoginCode, verifyLoginCode } from "@/lib/login-codes";
 import { parseChildren, saveChildren } from "@/lib/children";
 import { LOCK_MINUTES } from "@/lib/login-guard";
+import { insertMember } from "@/lib/members";
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH, hashPassword } from "@/lib/passwords";
 import { insert, newId, nowIso, remove, replaceAll, update } from "@/lib/sheets";
 import {
@@ -115,12 +116,6 @@ export async function logout() {
 
 // ---------------- Members ----------------
 
-async function nextMemberNo() {
-  const members = await getMembers();
-  const max = members.reduce((n, m) => Math.max(n, Number(m.memberNo.replace(/\D/g, "")) || 0), 0);
-  return `M${String(max + 1).padStart(4, "0")}`;
-}
-
 export async function saveMember(_: FormState, fd: FormData): Promise<FormState> {
   await requireEditor();
   const id = str(fd, "id");
@@ -163,12 +158,13 @@ export async function saveMember(_: FormState, fd: FormData): Promise<FormState>
       await saveChildren(id, children);
     } else {
       const newMemberId = newId();
-      await insert("Members", {
+      const { conflict } = await insertMember({
         ...record,
         id: newMemberId,
-        memberNo: str(fd, "memberNo") || (await nextMemberNo()),
+        memberNo: str(fd, "memberNo"),
         createdAt: nowIso(),
       });
+      if (conflict) return { error: `No. staf ${staffNo} telah didaftarkan kepada ahli lain.` };
       await saveChildren(newMemberId, children);
     }
   } catch (e) {
@@ -392,7 +388,9 @@ export async function setUserPassword(_: FormState, fd: FormData): Promise<FormS
   const pwError = checkNewPassword(password);
   if (pwError) return { error: pwError };
 
-  const record = { passwordHash: await hashPassword(password), passwordUpdatedAt: nowIso() };
+  // A new password also signs that user out on every device
+  const now = nowIso();
+  const record = { passwordHash: await hashPassword(password), passwordUpdatedAt: now, sessionsValidAfter: now };
   try {
     if ((await getUsers()).some((u) => u.email === email)) {
       await update("Users", email, record, "email");
@@ -406,7 +404,14 @@ export async function setUserPassword(_: FormState, fd: FormData): Promise<FormS
     return { error: (e as Error).message };
   }
   updateTag(TAGS.users);
-  return { ok: "Kata laluan dikemas kini." };
+  // Changing your own password keeps you signed in here (with a new session) and signs out your other devices
+  if (email === me.email) await createSession({ role: me.role, email: me.email });
+  return {
+    ok:
+      email === me.email
+        ? "Kata laluan dikemas kini. Anda telah dilog keluar daripada peranti lain."
+        : "Kata laluan dikemas kini. Pengguna tersebut telah dilog keluar daripada semua peranti.",
+  };
 }
 
 /** Super admin sets, changes or clears ("") a user's username. The user must already have a row (super admins get one when their password is set). */

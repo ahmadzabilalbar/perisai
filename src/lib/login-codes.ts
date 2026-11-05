@@ -2,7 +2,7 @@ import "server-only";
 import { createHash, randomInt, timingSafeEqual } from "node:crypto";
 import { insert, readAll, remove, update } from "./sheets";
 import { isMailConfigured, sendMail } from "./mail";
-import { serialize } from "./login-guard";
+import { serialize } from "./throttle";
 
 /** Email sign-in with one-time 6-digit codes, stored (hashed) in the LoginCodes sheet. */
 

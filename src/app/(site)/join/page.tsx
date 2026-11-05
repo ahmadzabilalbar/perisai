@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { Markdown } from "@/components/Markdown";
 import { getSettings } from "@/lib/data";
+import { createFormToken } from "@/lib/form-token";
 import { JoinForm } from "./JoinForm";
+
+// Rendered per request so each visitor gets a fresh signed form token
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = { title: "Daftar sebagai ahli" };
 
@@ -34,6 +38,7 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
           currency={s.currency}
           annualFee={s.annualFee}
           lifetimeFee={s.lifetimeFee}
+          formToken={createFormToken()}
         />
       )}
     </div>

@@ -39,8 +39,9 @@ The app **creates the tabs and header rows automatically** on first use:
 | `Payments` | Payment log (one row per payment) |
 | `Content` | Pages and news posts |
 | `Settings` | Key/value website settings |
-| `Users` | Email addresses with admin access, their role (`admin` / `viewer`), password hash and optional username (unique, lowercase, used instead of the email when signing in) |
+| `Users` | Email addresses with admin access, their role (`admin` / `viewer`), password hash, optional username (unique, lowercase, used instead of the email when signing in) and `sessionsValidAfter` (sessions signed in earlier are rejected; set when the password changes) |
 | `LoginCodes` | Temporary email sign-in codes (hashed; removed after use) |
+| `LoginAttempts` | Failed password sign-ins per account. 5 failures in 15 minutes lock the account for 15 minutes (Google and email-code sign-in still work); the row is removed after a successful sign-in |
 
 You can also view or edit data directly in the sheet. Changes made in the sheet appear on the site within about 5 minutes, or immediately after any admin save.
 

@@ -1,5 +1,6 @@
 import "server-only";
 import { insert, readAll, remove, update } from "./sheets";
+import { serialize } from "./throttle";
 
 /**
  * Brute-force protection for sign-in.
@@ -15,21 +16,6 @@ const MAX_FAILURES = 5;
 const WINDOW_MS = 15 * 60 * 1000;
 const LOCK_MS = 15 * 60 * 1000;
 export const LOCK_MINUTES = LOCK_MS / 60_000;
-
-const queues = new Map<string, Promise<unknown>>();
-
-export function serialize<T>(key: string, fn: () => Promise<T>): Promise<T> {
-  const run = (queues.get(key) ?? Promise.resolve()).then(fn, fn);
-  const tail = run.then(
-    () => undefined,
-    () => undefined,
-  );
-  queues.set(key, tail);
-  void tail.then(() => {
-    if (queues.get(key) === tail) queues.delete(key);
-  });
-  return run;
-}
 
 export type AttemptResult = "ok" | "failed" | "locked";
 

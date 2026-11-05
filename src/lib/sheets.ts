@@ -1,5 +1,6 @@
 import "server-only";
 import { JWT } from "google-auth-library";
+import { serialize } from "./throttle";
 
 /**
  * Minimal Google Sheets "database".
@@ -64,7 +65,18 @@ export const TABLES = {
   Settings: ["key", "value"],
   // Google accounts allowed into /admin (super admins come from SUPERADMIN_EMAILS instead)
   // role: admin | viewer. username: optional, unique, lowercase; lets them sign in without typing their email
-  Users: ["email", "role", "name", "addedBy", "createdAt", "passwordHash", "passwordUpdatedAt", "username"],
+  // sessionsValidAfter: sessions signed in before this time are rejected (set when the password changes)
+  Users: [
+    "email",
+    "role",
+    "name",
+    "addedBy",
+    "createdAt",
+    "passwordHash",
+    "passwordUpdatedAt",
+    "username",
+    "sessionsValidAfter",
+  ],
   // One-time sign-in codes for email login (only a hash of the code is stored)
   LoginCodes: ["email", "codeHash", "expiresAt", "attempts", "createdAt"],
   // Failed password sign-ins per account (key = "pw:<email>"); the row is removed after a successful sign-in
@@ -234,10 +246,37 @@ export async function appendRows(table: TableName, rows: Row[]) {
   );
 }
 
+/**
+ * Row numbers come from an earlier readRows(), and a deletion (another server instance, or someone editing
+ * the sheet by hand) shifts the rows below it. Before writing or deleting by row number, check that each row
+ * still holds the same record (first column, the table's key) so we never overwrite or delete the wrong one.
+ */
+async function assertRowsUnchanged(table: TableName, rows: NumberedRow[]) {
+  const key = TABLES[table][0];
+  const ranges = rows.map(({ rowNumber }) => `ranges=${encodeURIComponent(`${table}!A${rowNumber}`)}`).join("&");
+  const data = await api<{ valueRanges?: { values?: string[][] }[] }>(`/values:batchGet?${ranges}`);
+  rows.forEach(({ row }, i) => {
+    const actual = data.valueRanges?.[i]?.values?.[0]?.[0] ?? "";
+    if (actual !== (row[key] ?? "")) {
+      throw new Error("Data dalam Google Sheet baru sahaja berubah. Sila muat semula halaman dan cuba lagi.");
+    }
+  });
+}
+
+/**
+ * Runs `fn` with exclusive access to `table` on this server instance, for read-then-write sequences that
+ * depend on row numbers. update(), remove() and replaceAll() take the lock themselves, so don't call them
+ * inside `fn`; use readRows/writeRows/appendRows/deleteRows instead.
+ */
+export function withTableLock<T>(table: TableName, fn: () => Promise<T>) {
+  return serialize(`sheet:${table}`, fn);
+}
+
 /** Overwrites the given sheet rows in place (one request). Row numbers must come from readRows(). */
 export async function writeRows(table: TableName, rows: NumberedRow[]) {
   if (!rows.length) return;
   await ensureSchema();
+  await assertRowsUnchanged(table, rows);
   await api(`/values:batchUpdate`, {
     method: "POST",
     body: JSON.stringify({
@@ -250,12 +289,13 @@ export async function writeRows(table: TableName, rows: NumberedRow[]) {
   });
 }
 
-/** Deletes the given sheet rows (one request). Row numbers must come from readRows(). */
-export async function deleteRows(table: TableName, rowNumbers: number[]) {
-  if (!rowNumbers.length) return;
+/** Deletes the given sheet rows (one request). The rows must come from readRows(). */
+export async function deleteRows(table: TableName, rows: NumberedRow[]) {
+  if (!rows.length) return;
   const ids = await ensureSchema();
+  await assertRowsUnchanged(table, rows);
   // Bottom-up, so each deletion doesn't shift the rows still to be deleted
-  const sorted = [...new Set(rowNumbers)].sort((a, b) => b - a);
+  const sorted = [...new Set(rows.map((r) => r.rowNumber))].sort((a, b) => b - a);
   await api(":batchUpdate", {
     method: "POST",
     body: JSON.stringify({
@@ -273,34 +313,41 @@ async function findRow(table: TableName, key: string, value: string) {
   return (await readRows(table)).find((r) => r.row[key] === value) ?? null;
 }
 
-export async function update(table: TableName, id: string, patch: Row, key = "id") {
-  const found = await findRow(table, key, id);
-  if (!found) throw new Error(`${table} record ${id} not found`);
-  const merged = { ...found.row, ...patch };
-  await writeRows(table, [{ rowNumber: found.rowNumber, row: merged }]);
-  return merged;
+export function update(table: TableName, id: string, patch: Row, key = "id") {
+  return withTableLock(table, async () => {
+    const found = await findRow(table, key, id);
+    if (!found) throw new Error(`${table} record ${id} not found`);
+    // The key column is never changed by a patch, so assertRowsUnchanged can match it
+    const merged = { ...found.row, ...patch, [TABLES[table][0]]: found.row[TABLES[table][0]] };
+    await writeRows(table, [{ rowNumber: found.rowNumber, row: merged }]);
+    return merged;
+  });
 }
 
 /**
  * Overwrites all data rows of a table. Writes the new rows first and only then clears
  * whatever is left below them, so a failure never leaves the table empty.
  */
-export async function replaceAll(table: TableName, rows: Row[]) {
-  await ensureSchema();
-  if (rows.length) {
-    await api(
-      `/values/${encodeURIComponent(`${table}!A2:${lastCol(table)}${rows.length + 1}`)}?valueInputOption=RAW`,
-      { method: "PUT", body: JSON.stringify({ values: rows.map((r) => toValues(table, r)) }) },
-    );
-  }
-  await api(`/values/${encodeURIComponent(`${table}!A${rows.length + 2}:${lastCol(table)}`)}:clear`, {
-    method: "POST",
+export function replaceAll(table: TableName, rows: Row[]) {
+  return withTableLock(table, async () => {
+    await ensureSchema();
+    if (rows.length) {
+      await api(
+        `/values/${encodeURIComponent(`${table}!A2:${lastCol(table)}${rows.length + 1}`)}?valueInputOption=RAW`,
+        { method: "PUT", body: JSON.stringify({ values: rows.map((r) => toValues(table, r)) }) },
+      );
+    }
+    await api(`/values/${encodeURIComponent(`${table}!A${rows.length + 2}:${lastCol(table)}`)}:clear`, {
+      method: "POST",
+    });
   });
 }
 
-export async function remove(table: TableName, id: string, key = "id") {
-  const found = await findRow(table, key, id);
-  if (found) await deleteRows(table, [found.rowNumber]);
+export function remove(table: TableName, id: string, key = "id") {
+  return withTableLock(table, async () => {
+    const found = await findRow(table, key, id);
+    if (found) await deleteRows(table, [found]);
+  });
 }
 
 export function newId() {

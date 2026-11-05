@@ -256,6 +256,8 @@ export interface AdminUser {
   passwordUpdatedAt: string;
   /** optional sign-in name (lowercase), used instead of the email on the login form */
   username: string;
+  /** ISO time; sessions issued before it are no longer accepted (blank = no cut-off) */
+  sessionsValidAfter: string;
 }
 
 export const getUsers = unstable_cache(
@@ -271,6 +273,6 @@ export const getUsers = unstable_cache(
         role: r.role === "admin" ? "admin" : "viewer",
       }));
   },
-  ["users"],
+  ["users-v2"], // bumped when sessionsValidAfter was added
   { tags: [TAGS.users], revalidate: REVALIDATE },
 );

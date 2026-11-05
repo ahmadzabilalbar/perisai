@@ -1,5 +1,15 @@
 import "server-only";
-import { appendRows, deleteRows, newId, nowIso, readRows, writeRows, type NumberedRow, type Row } from "./sheets";
+import {
+  appendRows,
+  deleteRows,
+  newId,
+  nowIso,
+  readRows,
+  withTableLock,
+  writeRows,
+  type NumberedRow,
+  type Row,
+} from "./sheets";
 import { GENDERS, OKU_DETAILS, OKU_SEPARATOR, OKU_TYPES, today } from "./format";
 
 export type ChildInput = {
@@ -51,7 +61,12 @@ export function parseChildren(fd: FormData): { children: ChildInput[]; error?: s
  * Only this member's rows are touched: kept children are updated in place, new ones appended,
  * and removed ones deleted. Other members' rows are never rewritten.
  */
-export async function saveChildren(memberId: string, children: ChildInput[]) {
+export function saveChildren(memberId: string, children: ChildInput[]) {
+  // Row numbers are read and then used, so nobody else may change the tab in between
+  return withTableLock("Children", () => replaceChildren(memberId, children));
+}
+
+async function replaceChildren(memberId: string, children: ChildInput[]) {
   const existing = new Map(
     (await readRows("Children")).filter((r) => r.row.memberId === memberId).map((r) => [r.row.id, r]),
   );
@@ -83,8 +98,5 @@ export async function saveChildren(memberId: string, children: ChildInput[]) {
   // In-place writes first (row numbers still valid), then appends, then deletions bottom-up
   await writeRows("Children", toWrite);
   await appendRows("Children", toAppend);
-  await deleteRows(
-    "Children",
-    [...existing.values()].map((r) => r.rowNumber),
-  );
+  await deleteRows("Children", [...existing.values()]);
 }

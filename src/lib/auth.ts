@@ -104,7 +104,12 @@ export const getSession = cache(async (): Promise<Session | null> => {
   if (typeof payload.email !== "string") return null; // e.g. old shared-password sessions
   // Re-check the access list so removals and role changes apply immediately
   const role = await roleForEmail(payload.email);
-  return role ? { role, email: payload.email } : null;
+  if (!role) return null;
+  // Sessions signed in before a password change are revoked
+  const user = (await getUsers()).find((u) => u.email === payload.email);
+  const cutoff = user?.sessionsValidAfter ? Math.floor(Date.parse(user.sessionsValidAfter) / 1000) : 0;
+  if ((payload.iat ?? 0) < cutoff) return null;
+  return { role, email: payload.email };
 });
 
 export async function isAdmin() {

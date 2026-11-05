@@ -13,11 +13,14 @@ export function JoinForm({
   currency,
   annualFee,
   lifetimeFee,
+  formToken,
 }: {
   defaultPlan: string;
   currency: string;
   annualFee: string;
   lifetimeFee: string;
+  /** Signed load time, checked by the server to filter out bots */
+  formToken: string;
 }) {
   const [state, action] = useActionState(submitJoin, undefined);
 
@@ -107,6 +110,7 @@ export function JoinForm({
 
       {/* Honeypot field, hidden from humans */}
       <input type="text" name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden />
+      <input type="hidden" name="formToken" value={formToken} />
 
       <FormMessage state={{ error: state?.error }} />
       <SubmitButton className="btn-primary w-full !py-3" pendingText="Menghantar…">

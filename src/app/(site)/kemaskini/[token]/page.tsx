@@ -5,6 +5,9 @@ import { UpdateChildrenForm } from "./UpdateChildrenForm";
 // Private per-member page: keep it out of search engines
 export const metadata: Metadata = { title: "Kemas kini maklumat anak", robots: { index: false, follow: false } };
 
+// Shows one family's children details: always render per request, never keep a cached copy on the server
+export const dynamic = "force-dynamic";
+
 type Props = { params: Promise<{ token: string }> };
 
 export default async function UpdateChildrenPage({ params }: Props) {
