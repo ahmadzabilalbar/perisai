@@ -95,8 +95,24 @@ export async function verifyLoginCodeAction(_: CodeState, fd: FormData): Promise
   const email = str(fd, "email").toLowerCase();
   const code = str(fd, "code").replace(/\s+/g, "");
   const role = EMAIL_RE.test(email) ? await roleForEmail(email) : null;
-  if (!role || !(await verifyLoginCode(email, code))) {
+  let result: Awaited<ReturnType<typeof verifyLoginCode>> = "failed";
+  if (role) {
+    try {
+      result = await verifyLoginCode(email, code);
+    } catch (e) {
+      console.error("Code sign-in failed", e);
+      return { step: "code", email, error: "Log masuk tidak dapat diproses. Sila cuba lagi sebentar lagi." };
+    }
+  }
+  if (!role || result !== "ok") {
     await new Promise((r) => setTimeout(r, 600));
+    if (result === "locked") {
+      return {
+        step: "code",
+        email,
+        error: `Terlalu banyak kod yang salah. Log masuk dengan kod dikunci selama ${LOCK_MINUTES} minit.`,
+      };
+    }
     return { step: "code", email, error: "Kod tersebut salah atau telah tamat tempoh. Sila minta kod baharu jika perlu." };
   }
   await createSession({ role, email });
@@ -150,9 +166,10 @@ export async function saveMember(_: FormState, fd: FormData): Promise<FormState>
 
   try {
     if (id) {
-      await update("Members", id, record);
-      await saveChildren(id, children);
+      // Different tabs with their own locks: write both at once
+      await Promise.all([update("Members", id, record), saveChildren(id, children)]);
     } else {
+      // New member: children only after the insert succeeds (a staff no. conflict must not leave orphan children)
       const newMemberId = newId();
       const { conflict } = await insertMember({
         ...record,
@@ -172,8 +189,7 @@ export async function saveMember(_: FormState, fd: FormData): Promise<FormState>
 
 export async function deleteMember(id: string) {
   await requireEditor();
-  await remove("Members", id);
-  await saveChildren(id, []);
+  await Promise.all([remove("Members", id), saveChildren(id, [])]);
   updateTag(TAGS.members);
   redirect("/admin/members");
 }

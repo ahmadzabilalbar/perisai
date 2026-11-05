@@ -21,8 +21,7 @@ export async function updateMyChildren(
   if (!children.length) return { error: "Sila daftarkan sekurang-kurangnya seorang anak." };
 
   try {
-    await saveChildren(m.id, children);
-    await update("Members", m.id, { updatedAt: nowIso() });
+    await Promise.all([saveChildren(m.id, children), update("Members", m.id, { updatedAt: nowIso() })]);
   } catch (e) {
     console.error(e);
     return { error: "Maaf, berlaku ralat. Sila cuba sebentar lagi." };

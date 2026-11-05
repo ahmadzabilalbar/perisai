@@ -2,7 +2,7 @@ import "server-only";
 import { createHash, randomInt, timingSafeEqual } from "node:crypto";
 import { insert, readAll, remove, update } from "./sheets";
 import { isMailConfigured, sendMail } from "./mail";
-import { serialize } from "./throttle";
+import { withLockout } from "./login-guard";
 
 /** Email sign-in with one-time 6-digit codes, stored (hashed) in the LoginCodes sheet. */
 
@@ -55,12 +55,13 @@ export async function sendLoginCode(email: string, siteName: string) {
 }
 
 /**
- * Returns true if the code is correct (and consumes it).
- * Guesses for the same email run one at a time, so parallel requests can't all read
- * the same attempt count and get past MAX_ATTEMPTS.
+ * "ok" if the code is correct (and consumes it), "failed" if not, "locked" after too many wrong codes.
+ * Each code allows MAX_ATTEMPTS guesses, and withLockout() also counts wrong guesses across codes,
+ * so requesting a fresh code every minute doesn't give unlimited guesses. Guesses for the same email
+ * run one at a time (withLockout serializes per key).
  */
 export function verifyLoginCode(email: string, code: string) {
-  return serialize(`code:${email}`, () => checkCode(email, code));
+  return withLockout(`code:${email}`, () => checkCode(email, code));
 }
 
 async function checkCode(email: string, code: string) {

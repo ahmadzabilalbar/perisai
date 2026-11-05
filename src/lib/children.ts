@@ -10,7 +10,7 @@ import {
   type NumberedRow,
   type Row,
 } from "./sheets";
-import { GENDERS, OKU_DETAILS, OKU_SEPARATOR, OKU_TYPES, today } from "./format";
+import { GENDERS, MAX_CHILDREN, OKU_DETAILS, OKU_SEPARATOR, OKU_TYPES, today } from "./format";
 
 export type ChildInput = {
   id: string;
@@ -32,6 +32,7 @@ export function parseChildren(fd: FormData): { children: ChildInput[]; error?: s
   const names = col("childName");
   const dobs = col("childDob");
   const genders = col("childGender");
+  if (names.length > MAX_CHILDREN) return { children: [], error: `Maksimum ${MAX_CHILDREN} anak bagi setiap borang.` };
 
   const children: ChildInput[] = [];
   for (let i = 0; i < names.length; i++) {

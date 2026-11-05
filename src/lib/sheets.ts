@@ -114,20 +114,51 @@ function client() {
   return jwt;
 }
 
+/** Per-attempt limit: a hung request would otherwise hold a table lock (and every write queued behind it). */
+const TIMEOUT_MS = 10_000;
+const RETRY_DELAYS_MS = [500, 1500];
+
+class SheetsError extends Error {
+  constructor(
+    readonly status: number,
+    body: string,
+  ) {
+    super(`Google Sheets API ${status}: ${body}`);
+  }
+}
+
+/**
+ * Retries: 429 (quota; Google rejected the request, so nothing was applied) for any request, and for reads
+ * also 5xx, timeouts and network errors. Writes aren't retried on those, since a write that timed out may
+ * still have been applied (an append would then be added twice).
+ */
 async function api<T = unknown>(path: string, init: RequestInit = {}): Promise<T> {
+  const isRead = (init.method ?? "GET") === "GET";
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await apiOnce<T>(path, init);
+    } catch (e) {
+      const status = e instanceof SheetsError ? e.status : 0; // 0 = timeout / network error
+      const retryable = status === 429 || (isRead && (status === 0 || status >= 500));
+      if (!retryable || attempt >= RETRY_DELAYS_MS.length) throw e;
+      await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[attempt]));
+    }
+  }
+}
+
+async function apiOnce<T>(path: string, init: RequestInit): Promise<T> {
   const { token } = await client().getAccessToken();
   const res = await fetch(`${API}/${env("GOOGLE_SHEET_ID")}${path}`, {
     ...init,
     cache: "no-store",
+    signal: AbortSignal.timeout(TIMEOUT_MS),
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
       ...init.headers,
     },
   });
-  if (!res.ok) {
-    throw new Error(`Google Sheets API ${res.status}: ${await res.text()}`);
-  }
+  if (!res.ok) throw new SheetsError(res.status, await res.text());
   return res.json() as Promise<T>;
 }
 
@@ -180,17 +211,26 @@ async function setupSchema(): Promise<SheetIds> {
     meta = await api<Meta>("?fields=sheets.properties(title,sheetId)");
   }
 
-  // Always make sure header rows are present and up to date
-  await api(`/values:batchUpdate`, {
-    method: "POST",
-    body: JSON.stringify({
-      valueInputOption: "RAW",
-      data: (Object.keys(TABLES) as TableName[]).map((t) => ({
-        range: `${t}!A1:${lastCol(t)}1`,
-        values: [TABLES[t]],
-      })),
-    }),
+  // Make sure header rows are present and up to date. Read first and only write the tabs that differ,
+  // so a normal cold start costs two reads instead of a read and a write.
+  const tables = Object.keys(TABLES) as TableName[];
+  const headerRange = (t: TableName) => `${t}!A1:${lastCol(t)}1`;
+  const current = await api<{ valueRanges?: { values?: string[][] }[] }>(
+    `/values:batchGet?${tables.map((t) => `ranges=${encodeURIComponent(headerRange(t))}`).join("&")}`,
+  );
+  const stale = tables.filter((t, i) => {
+    const row = current.valueRanges?.[i]?.values?.[0] ?? [];
+    return TABLES[t].some((h, j) => row[j] !== h);
   });
+  if (stale.length) {
+    await api(`/values:batchUpdate`, {
+      method: "POST",
+      body: JSON.stringify({
+        valueInputOption: "RAW",
+        data: stale.map((t) => ({ range: headerRange(t), values: [TABLES[t]] })),
+      }),
+    });
+  }
 
   const ids: SheetIds = {};
   for (const s of meta.sheets) {

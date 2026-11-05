@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { IconPlus, IconX } from "@/components/Icons";
-import { GENDERS, OKU_DETAILS, OKU_EXAMPLES, OKU_TYPES, splitOkuTypes, today } from "@/lib/format";
+import { GENDERS, MAX_CHILDREN, OKU_DETAILS, OKU_EXAMPLES, OKU_TYPES, splitOkuTypes, today } from "@/lib/format";
 
 type ChildValue = { id?: string; name?: string; dob?: string; gender?: string; okuType?: string; okuDetail?: string };
 
@@ -72,13 +72,17 @@ export function ChildrenFields({ initial = [], required = false }: { initial?: C
           </div>
         </div>
       ))}
-      <button
-        type="button"
-        onClick={add}
-        className="btn w-full border-2 border-dashed border-brand-400 bg-brand-50 py-3 font-semibold text-brand-700 hover:border-brand-500 hover:bg-brand-100"
-      >
-        <IconPlus className="size-5" /> {rows.length ? "Tambah anak lain" : "Tambah anak"}
-      </button>
+      {rows.length < MAX_CHILDREN ? (
+        <button
+          type="button"
+          onClick={add}
+          className="btn w-full border-2 border-dashed border-brand-400 bg-brand-50 py-3 font-semibold text-brand-700 hover:border-brand-500 hover:bg-brand-100"
+        >
+          <IconPlus className="size-5" /> {rows.length ? "Tambah anak lain" : "Tambah anak"}
+        </button>
+      ) : (
+        <p className="text-center text-sm text-slate-500">Maksimum {MAX_CHILDREN} anak.</p>
+      )}
     </div>
   );
 }

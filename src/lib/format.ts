@@ -22,6 +22,9 @@ export const STATE_LABEL: Record<MemberState, string> = {
 
 export const GENDERS = ["Lelaki", "Perempuan"] as const;
 
+/** Most children one form may submit (stops a single request from filling the Children tab). */
+export const MAX_CHILDREN = 15;
+
 /** Official OKU categories (JKM registration, certified by a KKM medical officer). A child may have several.
  * JKM's "Pelbagai" (multiple) category is left out on purpose: tick each type that applies instead. */
 export const OKU_TYPES = [
