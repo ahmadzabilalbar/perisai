@@ -52,7 +52,7 @@ export default async function MemberPage({ params }: Props) {
   const needsReminder = state === "Expired" || state === "Unpaid";
   const fee = m.membershipType === "Lifetime" ? s.lifetimeFee : s.annualFee;
   const typeLabel = MEMBERSHIP_LABEL[m.membershipType].toLowerCase();
-  // Message templates are edited in Tetapan → Peringatan yuran
+  // Message templates are edited in Tetapan → Templat mesej
   const reminder = needsReminder
     ? fillTemplate(state === "Expired" ? s.reminderExpired : s.reminderUnpaid, {
         nama: m.name,

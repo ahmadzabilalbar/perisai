@@ -52,10 +52,10 @@ const GROUPS: { title: string; fields: FieldDef[]; hint?: React.ReactNode }[] = 
     ],
   },
   {
-    title: "Peringatan yuran (WhatsApp)",
+    title: "Templat mesej",
     fields: [
-      { key: "reminderExpired", label: "Mesej: keahlian tamat tempoh", type: "textarea", rows: 9, wide: true },
-      { key: "reminderUnpaid", label: "Mesej: yuran belum dibayar", type: "textarea", rows: 9, wide: true },
+      { key: "reminderExpired", label: "Peringatan: keahlian tamat tempoh", type: "textarea", rows: 9, wide: true },
+      { key: "reminderUnpaid", label: "Peringatan: yuran belum dibayar", type: "textarea", rows: 9, wide: true },
     ],
     hint: (
       <>

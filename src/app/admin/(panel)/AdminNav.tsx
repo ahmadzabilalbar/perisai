@@ -23,7 +23,7 @@ const NAV = [
   { href: "/admin/members", label: "Ahli", icon: IconUsers },
   { href: "/admin/statistik", label: "Statistik", icon: IconChart },
   { href: "/admin/content", label: "Halaman & Berita", icon: IconDoc },
-  { href: "/admin/settings", label: "Tetapan laman web", icon: IconCog },
+  { href: "/admin/settings", label: "Tetapan", icon: IconCog },
 ];
 
 export function AdminNav({ user, role, isSuperAdmin }: { user: string; role: string; isSuperAdmin: boolean }) {
