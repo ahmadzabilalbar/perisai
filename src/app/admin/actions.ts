@@ -23,7 +23,7 @@ import { isSafeUrl, MARKDOWN_IMAGE, slugify, USER_ROLES, type UserRole } from "@
 import { LOCK_MINUTES } from "@/lib/login-guard";
 import { insertMember } from "@/lib/members";
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH, hashPassword } from "@/lib/passwords";
-import { insert, newId, nowIso, readAll, remove, replaceAll, update } from "@/lib/sheets";
+import { insert, newId, nowIso, readAll, readRows, remove, replaceAll, update, withTableLock, writeRows } from "@/lib/sheets";
 import {
   DEFAULT_SETTINGS,
   TAGS,
@@ -161,8 +161,8 @@ export async function logoutEverywhere() {
   if ((await getUsers()).some((u) => u.email === me.email)) {
     await update("Users", me.email, { sessionsValidAfter: now }, "email");
   } else {
-    // Super admins aren't normally listed in the sheet; add a row just to hold the cut-off
-    await insert("Users", { email: me.email, role: "admin", name: "", addedBy: me.email, createdAt: now, sessionsValidAfter: now });
+    // Super admins aren't normally listed in the sheet; add a row just to hold the cut-off (viewer: see setUserPassword)
+    await insert("Users", { email: me.email, role: "viewer", name: "", addedBy: me.email, createdAt: now, sessionsValidAfter: now });
   }
   updateTag(TAGS.users);
   await destroySession();
@@ -234,9 +234,23 @@ export async function saveMember(_: FormState, fd: FormData): Promise<FormState>
 
 export async function deleteMember(id: string) {
   await requireEditor();
-  await Promise.all([remove("Members", id), saveChildren(id, [])]);
+  await Promise.all([remove("Members", id), saveChildren(id, []), anonymisePayments(id)]);
   updateTag(TAGS.members);
   redirect("/admin/members");
+}
+
+/**
+ * Keeps a deleted member's payments (so yearly totals stay right) but removes the personal details in them:
+ * the name and the free-text note.
+ */
+function anonymisePayments(memberId: string) {
+  return withTableLock("Payments", async () => {
+    const rows = (await readRows("Payments")).filter((r) => r.row.memberId === memberId);
+    await writeRows(
+      "Payments",
+      rows.map((r) => ({ ...r, row: { ...r.row, memberName: "(ahli dipadam)", note: "" } })),
+    );
+  });
 }
 
 /**
@@ -498,8 +512,9 @@ export async function setUserPassword(_: FormState, fd: FormData): Promise<FormS
     if ((await getUsers()).some((u) => u.email === email)) {
       await update("Users", email, record, "email");
     } else if (superAdminEmails().includes(email)) {
-      // Super admins aren't normally listed in the sheet; add a row just to hold the password
-      await insert("Users", { email, role: "admin", name: "", addedBy: me.email, createdAt: nowIso(), ...record });
+      // Super admins aren't normally listed in the sheet; add a row just to hold the password.
+      // Viewer, so if they're later taken out of SUPERADMIN_EMAILS the row doesn't quietly keep them an admin.
+      await insert("Users", { email, role: "viewer", name: "", addedBy: me.email, createdAt: nowIso(), ...record });
     } else {
       return { error: "Pengguna tidak dijumpai." };
     }

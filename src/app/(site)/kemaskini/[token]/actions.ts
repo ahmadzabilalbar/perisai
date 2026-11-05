@@ -3,6 +3,7 @@
 import { updateTag } from "next/cache";
 import { nowIso, update } from "@/lib/sheets";
 import { parseChildren, saveChildren } from "@/lib/children";
+import { rateLimit } from "@/lib/throttle";
 import { TAGS, getMemberByToken } from "@/lib/data";
 
 export type UpdateChildrenState = { error?: string; ok?: string } | undefined;
@@ -15,6 +16,10 @@ export async function updateMyChildren(
 ): Promise<UpdateChildrenState> {
   const m = await getMemberByToken(token);
   if (!m) return { error: "Pautan ini tidak sah atau telah dibatalkan. Sila hubungi pihak PERISAI." };
+  // Each save writes to Google Sheets: 10 per link per hour is plenty for a family
+  if (!rateLimit(`kemaskini:${m.id}`, 10, 60 * 60 * 1000)) {
+    return { error: "Terlalu banyak kemas kini dalam masa yang singkat. Sila cuba lagi dalam masa sejam." };
+  }
 
   const { children, error } = parseChildren(fd);
   if (error) return { error };

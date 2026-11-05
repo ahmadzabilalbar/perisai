@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { EditOnly } from "@/components/EditOnly";
 import { IconExternal, IconPlus } from "@/components/Icons";
+import { requireAdmin } from "@/lib/auth";
 import { formatDate, getAllContent } from "@/lib/data";
 
 export const metadata: Metadata = { title: "Halaman & Berita" };
 
 export default async function ContentPage() {
+  await requireAdmin(); // lists drafts: check here, not only in the layout
   const all = await getAllContent();
   const pages = all.filter((c) => c.type === "page");
   const posts = all.filter((c) => c.type === "post").sort((a, b) => b.createdAt.localeCompare(a.createdAt));

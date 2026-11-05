@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ConfirmButton } from "@/components/ConfirmButton";
 import { EditOnly } from "@/components/EditOnly";
+import { requireAdmin } from "@/lib/auth";
 import { getAllContent } from "@/lib/data";
 import { deleteContent } from "../../../actions";
 import { ContentForm } from "../ContentForm";
@@ -10,6 +11,7 @@ import { ContentForm } from "../ContentForm";
 export const metadata: Metadata = { title: "Sunting kandungan" };
 
 export default async function EditContentPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdmin(); // shows drafts: check here, not only in the layout
   const { id } = await params;
   const content = (await getAllContent()).find((c) => c.id === id);
   if (!content) notFound();
